@@ -174,14 +174,14 @@
 </div>
 
 <script>
-    const MAIN_KEY = 'kittens_v13';
-    const HISTORY_KEY = 'kittens_v13_history';
+    const MAIN_KEY = 'kittens_v14';
+    const HISTORY_KEY = 'kittens_v14_history';
 
     let kittens = [];
     let gamesCount = 0;
     let gamesAreWeek = [];
-    // lockedRounds[gameIndex][kittenIndex] = true/false
     let lockedRounds = {};
+    let hasChanges = false; // Были ли изменения с момента открытия
 
     const MAX_POINTS = 12;
     const MAX_POINTS_WEEK = 14;
@@ -201,6 +201,14 @@
             lockedRounds: JSON.parse(JSON.stringify(lockedRounds)),
             date: new Date().toLocaleString('ru-RU')
         };
+        // Проверяем, не совпадает ли с последним сохранением
+        if (history.length > 0) {
+            let last = history[0];
+            if (JSON.stringify(last.kittens) === JSON.stringify(snapshot.kittens) &&
+                last.gamesCount === snapshot.gamesCount) {
+                return; // Не сохраняем дубликат
+            }
+        }
         history.unshift(snapshot);
         if (history.length > 3) history = history.slice(0, 3);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
@@ -209,7 +217,7 @@
     function saveData() {
         let data = { kittens, gamesCount, gamesAreWeek, lockedRounds };
         localStorage.setItem(MAIN_KEY, JSON.stringify(data));
-        saveToHistory();
+        hasChanges = true;
     }
 
     function loadData() {
@@ -217,23 +225,41 @@
         gamesCount = 0;
         gamesAreWeek = [];
         lockedRounds = {};
+        hasChanges = false;
     }
 
+    // Сохраняем в историю при закрытии/уходе
+    window.addEventListener('beforeunload', function() {
+        if (hasChanges && kittens.length > 0) {
+            saveToHistory();
+        }
+    });
+
+    // Также сохраняем при сворачивании (для телефонов)
+    window.addEventListener('pagehide', function() {
+        if (hasChanges && kittens.length > 0) {
+            saveToHistory();
+        }
+    });
+
     function restoreFromHistory(index) {
-        if (!confirm('Восстановить это сохранение?')) return;
+        if (!confirm('Восстановить это сохранение? Текущие данные будут заменены.')) return;
         let history = getHistory();
         let snap = history[index];
         kittens = snap.kittens || [];
         gamesCount = snap.gamesCount || 0;
         gamesAreWeek = snap.gamesAreWeek || [];
         lockedRounds = snap.lockedRounds || {};
-        saveData();
+        hasChanges = true;
+        // Сохраняем текущее состояние и в основное хранилище
+        let data = { kittens, gamesCount, gamesAreWeek, lockedRounds };
+        localStorage.setItem(MAIN_KEY, JSON.stringify(data));
         render();
         document.getElementById('historyPanel').style.display = 'none';
     }
 
     function deleteHistory(index) {
-        if (!confirm('Удалить?')) return;
+        if (!confirm('Удалить это сохранение из истории?')) return;
         let history = getHistory();
         history.splice(index, 1);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
@@ -244,7 +270,7 @@
         let container = document.getElementById('historyList');
         let history = getHistory();
         if (history.length === 0) {
-            container.innerHTML = '<p style="color:#888;">История пуста.</p>';
+            container.innerHTML = '<p style="color:#888;">История пуста. Поработай с таблицей и закрой сайт — здесь появится сохранение.</p>';
             return;
         }
         container.innerHTML = history.map((h, i) => `
@@ -272,13 +298,14 @@
     }
 
     function fullReset() {
-        if (confirm('Точно всё сбросить?')) {
+        if (confirm('Точно всё сбросить? Данные нельзя будет восстановить.')) {
             localStorage.removeItem(MAIN_KEY);
             localStorage.removeItem(HISTORY_KEY);
             kittens = [];
             gamesCount = 0;
             gamesAreWeek = [];
             lockedRounds = {};
+            hasChanges = false;
             render();
             document.getElementById('historyPanel').style.display = 'none';
         }
@@ -288,7 +315,6 @@
         return gamesAreWeek[gameIndex] ? MAX_POINTS_WEEK : MAX_POINTS;
     }
 
-    // Проверяем, все ли котята получили действие в текущем раунде
     function allKittensLockedInGame(gameIndex) {
         if (kittens.length === 0) return false;
         return kittens.every((k, ki) => isLocked(ki, gameIndex) || isGameInactive(k, gameIndex));
@@ -417,7 +443,6 @@
         kittens[ki].rounds += 1;
         lock(ki, gi);
 
-        // Если все котята заблокированы — снимаем все замки (новый раунд)
         if (allKittensLockedInGame(gi)) {
             unlockAll(gi);
         }
@@ -542,7 +567,6 @@
             lock(ki, lastGame);
         });
 
-        // После "Всем" проверяем — все ли теперь заблокированы
         if (allKittensLockedInGame(lastGame)) {
             unlockAll(lastGame);
         }
