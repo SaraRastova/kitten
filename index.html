@@ -34,6 +34,7 @@
         .btn-del     { background: #e74c3c; }
         .btn-copy    { background: #6c5ce7; font-size: 14px; padding: 10px 20px; }
         .btn-small   { padding: 4px 8px; font-size: 11px; }
+        .btn-small:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 700px; }
@@ -61,6 +62,11 @@
         .round-badge {
             display: inline-block; background: #ff9800; color: white;
             padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-top: 2px;
+        }
+
+        .locked-badge {
+            display: inline-block; background: #e74c3c; color: white;
+            padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-top: 2px;
         }
 
         textarea {
@@ -119,6 +125,9 @@
             <button class="btn btn-plus1" onclick="applyToAll(1)">🐾 + Всем (+1 балл, +1 раунд)</button>
             <button class="btn btn-skip" onclick="applyToAll(0)">⏭ Скип всем (0 баллов, +1 раунд)</button>
         </div>
+        <div class="hint">
+            Один котёнок = одно действие за игру. Повторно кнопки не работают.
+        </div>
     </div>
 
     <!-- Сводка -->
@@ -140,21 +149,34 @@
 
 <script>
     // ==================== ДАННЫЕ ====================
-    let kittens = JSON.parse(localStorage.getItem('kittens_v8') || '[]');
-    let gamesCount = parseInt(localStorage.getItem('kittens_v8_gamesCount') || '0');
-    let gamesAreWeek = JSON.parse(localStorage.getItem('kittens_v8_gamesAreWeek') || '[]');
+    let kittens = JSON.parse(localStorage.getItem('kittens_v9') || '[]');
+    let gamesCount = parseInt(localStorage.getItem('kittens_v9_gamesCount') || '0');
+    let gamesAreWeek = JSON.parse(localStorage.getItem('kittens_v9_gamesAreWeek') || '[]');
+    // lockedRounds[gameIndex][kittenIndex] = true/false — заблокирован ли раунд
+    let lockedRounds = JSON.parse(localStorage.getItem('kittens_v9_locked') || '{}');
 
     const MAX_POINTS = 12;
     const MAX_POINTS_WEEK = 14;
 
     function saveData() {
-        localStorage.setItem('kittens_v8', JSON.stringify(kittens));
-        localStorage.setItem('kittens_v8_gamesCount', gamesCount);
-        localStorage.setItem('kittens_v8_gamesAreWeek', JSON.stringify(gamesAreWeek));
+        localStorage.setItem('kittens_v9', JSON.stringify(kittens));
+        localStorage.setItem('kittens_v9_gamesCount', gamesCount);
+        localStorage.setItem('kittens_v9_gamesAreWeek', JSON.stringify(gamesAreWeek));
+        localStorage.setItem('kittens_v9_locked', JSON.stringify(lockedRounds));
     }
 
     function getMaxPoints(gameIndex) {
         return gamesAreWeek[gameIndex] ? MAX_POINTS_WEEK : MAX_POINTS;
+    }
+
+    function isLocked(gameIndex, kittenIndex) {
+        if (!lockedRounds[gameIndex]) return false;
+        return lockedRounds[gameIndex][kittenIndex] === true;
+    }
+
+    function lock(gameIndex, kittenIndex) {
+        if (!lockedRounds[gameIndex]) lockedRounds[gameIndex] = {};
+        lockedRounds[gameIndex][kittenIndex] = true;
     }
 
     // ==================== ОТРИСОВКА ====================
@@ -195,15 +217,22 @@
                 total += val;
 
                 let cellClass = inactive ? 'inactive-game' : '';
+                let locked = isLocked(g, ki);
 
                 html += `<td class="${cellClass}" style="padding:4px;">
-                    <div class="points-cell">${val}</div>
-                    <div class="game-btns">
+                    <div class="points-cell">${val}</div>`;
+                
+                if (locked) {
+                    html += `<span class="locked-badge">🔒</span>`;
+                } else {
+                    html += `<div class="game-btns">
                         <button class="btn btn-plus2 btn-small" onclick="addToGame(${ki}, ${g}, 2)">++</button>
                         <button class="btn btn-plus1 btn-small" onclick="addToGame(${ki}, ${g}, 1)">+</button>
                         <button class="btn btn-skip btn-small" onclick="addRoundOnly(${ki}, ${g})">0</button>
-                    </div>
-                </td>`;
+                    </div>`;
+                }
+                
+                html += `</td>`;
             }
             html += `<td class="total-col">${total}</td>`;
             html += `<td class="rounds-col"><span class="round-badge">${k.rounds}</span></td>`;
@@ -250,6 +279,9 @@
     }
 
     function addToGame(ki, gi, delta) {
+        // Проверяем, не заблокирован ли уже раунд
+        if (isLocked(gi, ki)) return;
+
         if (!kittens[ki].games) kittens[ki].games = [];
         let current = kittens[ki].games[gi] || 0;
         let max = getMaxPoints(gi);
@@ -258,15 +290,19 @@
         kittens[ki].games[gi] = newVal;
         if (kittens[ki].rounds === undefined) kittens[ki].rounds = 0;
         kittens[ki].rounds += 1;
+        lock(gi, ki); // Блокируем
         saveData();
         render();
     }
 
     function addRoundOnly(ki, gi) {
+        if (isLocked(gi, ki)) return;
+
         if (!kittens[ki].games) kittens[ki].games = [];
         kittens[ki].games[gi] = 0;
         if (kittens[ki].rounds === undefined) kittens[ki].rounds = 0;
         kittens[ki].rounds += 1;
+        lock(gi, ki); // Блокируем
         saveData();
         render();
     }
@@ -287,7 +323,6 @@
     function copyReport() {
         const text = document.getElementById('reportArea').textContent;
         navigator.clipboard.writeText(text).then(() => {
-            // Мигаем кнопкой
             const btn = document.querySelector('.btn-copy');
             const originalText = btn.textContent;
             btn.textContent = '✅ Скопировано!';
@@ -305,10 +340,8 @@
     function parseKittenLine(line) {
         line = line.trim();
         if (!line) return null;
-
         let name = '';
         let id = '';
-
         let idMatch = line.match(/\[(\d+)\]\s*$/);
         if (idMatch) {
             id = idMatch[1];
@@ -320,16 +353,13 @@
                 line = line.replace(/(\d+)\s*$/, '').trim();
             }
         }
-
         if (line.includes('-')) {
             let parts = line.split('-');
             name = parts.slice(1).join('-').trim();
         } else {
             name = line;
         }
-
         name = name.replace(/\s+/g, ' ').trim();
-
         if (!name || !id) return null;
         return { name, id };
     }
@@ -338,11 +368,9 @@
     function bulkAdd() {
         let text = document.getElementById('bulkInput').value.trim();
         if (!text) { alert('Вставь список котят!'); return; }
-
         let lines = text.split('\n');
         let added = 0;
         let skipped = 0;
-
         lines.forEach(line => {
             let result = parseKittenLine(line);
             if (result) {
@@ -362,7 +390,6 @@
                 }
             }
         });
-
         saveData();
         render();
         document.getElementById('bulkInput').value = '';
@@ -404,9 +431,10 @@
         kittens.forEach(k => {
             if (!k.games) k.games = [];
             k.games.push(defaultPoints);
-            // Раунды сбрасываются при новой игре
             k.rounds = 0;
         });
+        // Сбрасываем блокировки для новой игры
+        lockedRounds[gamesCount - 1] = {};
         saveData();
         render();
         document.getElementById('gameOfWeekCheck').checked = false;
@@ -417,7 +445,10 @@
         if (gamesCount === 0) { alert('Сначала добавьте игру!'); return; }
         const lastGame = gamesCount - 1;
         const max = getMaxPoints(lastGame);
-        kittens.forEach(k => {
+        kittens.forEach((k, ki) => {
+            // Пропускаем уже заблокированных
+            if (isLocked(lastGame, ki)) return;
+            
             if (!k.games) k.games = new Array(gamesCount).fill(0);
             if (k.games[lastGame] === undefined) k.games[lastGame] = 0;
             let newVal = k.games[lastGame] + delta;
@@ -425,6 +456,7 @@
             k.games[lastGame] = newVal;
             if (k.rounds === undefined) k.rounds = 0;
             k.rounds += 1;
+            lock(lastGame, ki);
         });
         saveData();
         render();
