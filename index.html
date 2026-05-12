@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учёт баллов котят</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background: #f0e6f6; padding: 20px; color: #333; }
+        .container { max-width: 1300px; margin: 0 auto; }
+
+        h2 { color: #6a3d99; margin-top: 0; }
+        h3 { color: #6a3d99; margin: 15px 0 10px; }
+
+        .card {
+            background: white; border-radius: 12px; padding: 20px;
+            margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .add-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .add-row input {
+            padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
+        }
+        .btn {
+            padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer;
+            font-size: 13px; font-weight: bold; color: white; white-space: nowrap;
+        }
+        .btn-add     { background: #8e44ad; }
+        .btn-bulk    { background: #e91e63; }
+        .btn-game    { background: #27ae60; font-size: 14px; padding: 10px 20px; }
+        .btn-plus2   { background: #27ae60; }
+        .btn-plus1   { background: #2980b9; }
+        .btn-skip    { background: #f39c12; }
+        .btn-del     { background: #e74c3c; }
+        .btn-copy    { background: #6c5ce7; font-size: 14px; padding: 10px 20px; }
+        .btn-small   { padding: 4px 8px; font-size: 11px; }
+
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 700px; }
+        th, td {
+            border: 1px solid #ddd; padding: 8px 6px; text-align: center;
+            font-size: 13px; vertical-align: middle;
+        }
+        th { background: #8e44ad; color: white; font-weight: bold; }
+
+        .kitten-name { font-weight: bold; font-size: 14px; }
+        .kitten-id   { color: #888; font-size: 11px; }
+
+        .points-cell { font-weight: bold; font-size: 16px; min-width: 40px; }
+        .total-col   { background: #f5e6ff; font-weight: bold; font-size: 17px; }
+        .rounds-col  { background: #fff3e0; font-weight: bold; font-size: 15px; }
+
+        .game-btns { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+
+        .action-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .action-btns button { flex: 1; min-width: 100px; }
+
+        .game-of-week { background: #ffd700; color: #333; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+        .inactive-game { opacity: 0.4; background: #f8f8f8; }
+
+        .round-badge {
+            display: inline-block; background: #ff9800; color: white;
+            padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-top: 2px;
+        }
+
+        textarea {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px;
+            font-size: 13px; font-family: monospace; resize: vertical;
+        }
+        .hint { font-size: 12px; color: #888; margin-top: 5px; }
+
+        .report-area {
+            background: #f8f8f8; border: 1px solid #ddd; border-radius: 8px;
+            padding: 12px 16px; font-family: monospace; font-size: 14px;
+            white-space: pre; max-height: 300px; overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h2>🐱 Учёт баллов котят</h2>
+
+    <!-- Добавление котёнка -->
+    <div class="card">
+        <h3>➕ Добавить котёнка по одному</h3>
+        <div class="add-row">
+            <input type="text" id="nameInput" placeholder="Имя котёнка">
+            <input type="text" id="idInput" placeholder="ID">
+            <button class="btn btn-add" onclick="addKitten()">Добавить</button>
+        </div>
+    </div>
+
+    <!-- Массовое добавление -->
+    <div class="card">
+        <h3>📋 Массовое добавление котят</h3>
+        <textarea id="bulkInput" rows="6" placeholder="Вставь список:&#10;я - Волчевоюшек [1694118]&#10;я - Криволапенькая [1691978]&#10;Вершиночка [1545056]&#10;Буренький [1646499]"></textarea>
+        <div class="hint">
+            Формат: <b>что-то - Имя [ID]</b> или просто <b>Имя [ID]</b> (каждая строка — новый котёнок).
+        </div>
+        <button class="btn btn-bulk" onclick="bulkAdd()" style="margin-top:8px;">📥 Добавить всех из списка</button>
+    </div>
+
+    <!-- Основная таблица -->
+    <div class="card">
+        <h3>📋 Игры и баллы</h3>
+        <div class="table-wrap" id="tableContainer"></div>
+
+        <div style="margin-top:15px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+            <button class="btn btn-game" onclick="addNewGame()">🎮 + Новая игра</button>
+            <label style="cursor:pointer; font-size:14px;">
+                <input type="checkbox" id="gameOfWeekCheck"> Игра недели (+4 вместо +2, макс 14)
+            </label>
+        </div>
+
+        <div class="action-btns" style="margin-top:10px;">
+            <button class="btn btn-plus2" onclick="applyToAll(2)">🐾 ++ Всем (+2 балла, +1 раунд)</button>
+            <button class="btn btn-plus1" onclick="applyToAll(1)">🐾 + Всем (+1 балл, +1 раунд)</button>
+            <button class="btn btn-skip" onclick="applyToAll(0)">⏭ Скип всем (0 баллов, +1 раунд)</button>
+        </div>
+    </div>
+
+    <!-- Сводка -->
+    <div class="card">
+        <h3>📊 Итоги</h3>
+        <div style="margin-bottom:10px;">
+            <label style="font-weight:bold;">Количество игр:</label>
+            <input type="text" id="totalGames" readonly style="padding:6px; border:1px solid #ccc; border-radius:4px; width:80px; text-align:center;">
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px;">
+            <h3 style="margin:0;">🏆 Баллы</h3>
+            <button class="btn btn-copy" onclick="copyReport()">📋 Копировать</button>
+        </div>
+        <div class="report-area" id="reportArea"></div>
+    </div>
+
+</div>
+
+<script>
+    // ==================== ДАННЫЕ ====================
+    let kittens = JSON.parse(localStorage.getItem('kittens_v8') || '[]');
+    let gamesCount = parseInt(localStorage.getItem('kittens_v8_gamesCount') || '0');
+    let gamesAreWeek = JSON.parse(localStorage.getItem('kittens_v8_gamesAreWeek') || '[]');
+
+    const MAX_POINTS = 12;
+    const MAX_POINTS_WEEK = 14;
+
+    function saveData() {
+        localStorage.setItem('kittens_v8', JSON.stringify(kittens));
+        localStorage.setItem('kittens_v8_gamesCount', gamesCount);
+        localStorage.setItem('kittens_v8_gamesAreWeek', JSON.stringify(gamesAreWeek));
+    }
+
+    function getMaxPoints(gameIndex) {
+        return gamesAreWeek[gameIndex] ? MAX_POINTS_WEEK : MAX_POINTS;
+    }
+
+    // ==================== ОТРИСОВКА ====================
+    function render() {
+        renderTable();
+        renderReport();
+        document.getElementById('totalGames').value = gamesCount;
+    }
+
+    function renderTable() {
+        const container = document.getElementById('tableContainer');
+        if (kittens.length === 0) {
+            container.innerHTML = '<p style="color:#999;">Пока нет котят. Добавьте первого!</p>';
+            return;
+        }
+        if (gamesCount === 0) {
+            container.innerHTML = '<p style="color:#999;">Нет игр. Нажмите «+ Новая игра».</p>';
+            return;
+        }
+
+        let html = '<table><thead><tr><th>Котёнок</th>';
+        for (let g = 0; g < gamesCount; g++) {
+            let max = getMaxPoints(g);
+            html += `<th>Игра ${g+1}${gamesAreWeek[g] ? ' <span class="game-of-week">⭐неделя</span>' : ''}<br><small>(макс ${max})</small></th>`;
+        }
+        html += '<th class="total-col">Всего баллов</th><th class="rounds-col">Раунды</th><th>Не играл</th></tr></thead><tbody>';
+
+        kittens.forEach((k, ki) => {
+            if (k.rounds === undefined) k.rounds = 0;
+
+            html += '<tr>';
+            html += `<td><span class="kitten-name">${esc(k.name)}</span><br><span class="kitten-id">ID: ${esc(k.id)}</span></td>`;
+
+            let total = 0;
+            for (let g = 0; g < gamesCount; g++) {
+                let inactive = isGameInactive(k, g);
+                let val = inactive ? 0 : getGameValue(k, g);
+                total += val;
+
+                let cellClass = inactive ? 'inactive-game' : '';
+
+                html += `<td class="${cellClass}" style="padding:4px;">
+                    <div class="points-cell">${val}</div>
+                    <div class="game-btns">
+                        <button class="btn btn-plus2 btn-small" onclick="addToGame(${ki}, ${g}, 2)">++</button>
+                        <button class="btn btn-plus1 btn-small" onclick="addToGame(${ki}, ${g}, 1)">+</button>
+                        <button class="btn btn-skip btn-small" onclick="addRoundOnly(${ki}, ${g})">0</button>
+                    </div>
+                </td>`;
+            }
+            html += `<td class="total-col">${total}</td>`;
+            html += `<td class="rounds-col"><span class="round-badge">${k.rounds}</span></td>`;
+            html += `<td style="font-size:11px;">
+                До: <input type="number" value="${k.notPlayedBefore || 0}" min="0" max="${gamesCount}" 
+                    style="width:40px;" onchange="setNotPlayedBefore(${ki}, this.value)"><br>
+                После: <input type="number" value="${k.notPlayedAfter || 0}" min="0" max="${gamesCount}" 
+                    style="width:40px;" onchange="setNotPlayedAfter(${ki}, this.value)"><br>
+                <button class="btn btn-del btn-small" onclick="deleteKitten(${ki})">🗑 Удалить</button>
+            </td>`;
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function renderReport() {
+        const area = document.getElementById('reportArea');
+        let lines = ['Баллы'];
+        kittens.forEach(k => {
+            let total = 0;
+            for (let g = 0; g < gamesCount; g++) {
+                if (!isGameInactive(k, g)) {
+                    total += getGameValue(k, g);
+                }
+            }
+            lines.push(`${k.id} - ${total}`);
+        });
+        area.textContent = lines.join('\n');
+    }
+
+    // ==================== ЛОГИКА ====================
+    function getGameValue(kitten, gameIndex) {
+        if (!kitten.games) kitten.games = [];
+        return kitten.games[gameIndex] ?? 0;
+    }
+
+    function isGameInactive(kitten, gameIndex) {
+        const gameNum = gameIndex + 1;
+        if (kitten.notPlayedBefore > 0 && gameNum <= kitten.notPlayedBefore) return true;
+        if (kitten.notPlayedAfter > 0 && gameNum > kitten.notPlayedAfter) return true;
+        return false;
+    }
+
+    function addToGame(ki, gi, delta) {
+        if (!kittens[ki].games) kittens[ki].games = [];
+        let current = kittens[ki].games[gi] || 0;
+        let max = getMaxPoints(gi);
+        let newVal = current + delta;
+        if (newVal > max) newVal = max;
+        kittens[ki].games[gi] = newVal;
+        if (kittens[ki].rounds === undefined) kittens[ki].rounds = 0;
+        kittens[ki].rounds += 1;
+        saveData();
+        render();
+    }
+
+    function addRoundOnly(ki, gi) {
+        if (!kittens[ki].games) kittens[ki].games = [];
+        kittens[ki].games[gi] = 0;
+        if (kittens[ki].rounds === undefined) kittens[ki].rounds = 0;
+        kittens[ki].rounds += 1;
+        saveData();
+        render();
+    }
+
+    function setNotPlayedBefore(ki, value) {
+        kittens[ki].notPlayedBefore = parseInt(value) || 0;
+        saveData();
+        render();
+    }
+
+    function setNotPlayedAfter(ki, value) {
+        kittens[ki].notPlayedAfter = parseInt(value) || 0;
+        saveData();
+        render();
+    }
+
+    // ==================== КОПИРОВАНИЕ ====================
+    function copyReport() {
+        const text = document.getElementById('reportArea').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            // Мигаем кнопкой
+            const btn = document.querySelector('.btn-copy');
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Скопировано!';
+            btn.style.background = '#00b894';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '#6c5ce7';
+            }, 1500);
+        }).catch(() => {
+            alert('Не удалось скопировать. Выдели текст вручную и нажми Ctrl+C.');
+        });
+    }
+
+    // ==================== ПАРСИНГ СТРОКИ ====================
+    function parseKittenLine(line) {
+        line = line.trim();
+        if (!line) return null;
+
+        let name = '';
+        let id = '';
+
+        let idMatch = line.match(/\[(\d+)\]\s*$/);
+        if (idMatch) {
+            id = idMatch[1];
+            line = line.replace(/\[(\d+)\]\s*$/, '').trim();
+        } else {
+            let numMatch = line.match(/(\d+)\s*$/);
+            if (numMatch) {
+                id = numMatch[1];
+                line = line.replace(/(\d+)\s*$/, '').trim();
+            }
+        }
+
+        if (line.includes('-')) {
+            let parts = line.split('-');
+            name = parts.slice(1).join('-').trim();
+        } else {
+            name = line;
+        }
+
+        name = name.replace(/\s+/g, ' ').trim();
+
+        if (!name || !id) return null;
+        return { name, id };
+    }
+
+    // ==================== МАССОВОЕ ДОБАВЛЕНИЕ ====================
+    function bulkAdd() {
+        let text = document.getElementById('bulkInput').value.trim();
+        if (!text) { alert('Вставь список котят!'); return; }
+
+        let lines = text.split('\n');
+        let added = 0;
+        let skipped = 0;
+
+        lines.forEach(line => {
+            let result = parseKittenLine(line);
+            if (result) {
+                let exists = kittens.some(k => k.id === result.id);
+                if (!exists) {
+                    kittens.push({
+                        name: result.name,
+                        id: result.id,
+                        notPlayedBefore: 0,
+                        notPlayedAfter: 0,
+                        games: new Array(gamesCount).fill(0),
+                        rounds: 0
+                    });
+                    added++;
+                } else {
+                    skipped++;
+                }
+            }
+        });
+
+        saveData();
+        render();
+        document.getElementById('bulkInput').value = '';
+        alert(`Добавлено: ${added} котят${skipped > 0 ? `\nПропущено (дубликаты): ${skipped}` : ''}`);
+    }
+
+    // ==================== ОДИНОЧНОЕ ДОБАВЛЕНИЕ ====================
+    function addKitten() {
+        const name = document.getElementById('nameInput').value.trim();
+        const id   = document.getElementById('idInput').value.trim();
+        if (!name || !id) { alert('Заполни имя и ID!'); return; }
+        kittens.push({
+            name, id,
+            notPlayedBefore: 0,
+            notPlayedAfter: 0,
+            games: new Array(gamesCount).fill(0),
+            rounds: 0
+        });
+        saveData();
+        render();
+        document.getElementById('nameInput').value = '';
+        document.getElementById('idInput').value = '';
+    }
+
+    function deleteKitten(index) {
+        if (confirm(`Удалить котёнка "${kittens[index].name}"?`)) {
+            kittens.splice(index, 1);
+            saveData();
+            render();
+        }
+    }
+
+    // ==================== НОВАЯ ИГРА ====================
+    function addNewGame() {
+        const isWeek = document.getElementById('gameOfWeekCheck').checked;
+        const defaultPoints = isWeek ? 4 : 2;
+        gamesCount++;
+        gamesAreWeek.push(isWeek);
+        kittens.forEach(k => {
+            if (!k.games) k.games = [];
+            k.games.push(defaultPoints);
+            // Раунды сбрасываются при новой игре
+            k.rounds = 0;
+        });
+        saveData();
+        render();
+        document.getElementById('gameOfWeekCheck').checked = false;
+    }
+
+    // ==================== ПРИМЕНИТЬ КО ВСЕМ ====================
+    function applyToAll(delta) {
+        if (gamesCount === 0) { alert('Сначала добавьте игру!'); return; }
+        const lastGame = gamesCount - 1;
+        const max = getMaxPoints(lastGame);
+        kittens.forEach(k => {
+            if (!k.games) k.games = new Array(gamesCount).fill(0);
+            if (k.games[lastGame] === undefined) k.games[lastGame] = 0;
+            let newVal = k.games[lastGame] + delta;
+            if (newVal > max) newVal = max;
+            k.games[lastGame] = newVal;
+            if (k.rounds === undefined) k.rounds = 0;
+            k.rounds += 1;
+        });
+        saveData();
+        render();
+    }
+
+    // ==================== СОХРАНЕНИЕ ПОЛЕЙ ====================
+    document.getElementById('idInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') addKitten();
+    });
+
+    function esc(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    render();
+</script>
+</body>
+</html>
