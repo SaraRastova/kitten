@@ -38,6 +38,7 @@
         .btn-copy    { background: #6c5ce7; font-size: 14px; padding: 10px 20px; }
         .btn-reset   { background: #c0392b; font-size: 13px; padding: 8px 16px; }
         .btn-history { background: #e67e22; font-size: 13px; padding: 8px 16px; }
+        .btn-guide   { background: #3498db; font-size: 13px; padding: 8px 16px; }
         .btn-restore { background: #8e44ad; font-size: 11px; padding: 4px 10px; }
         .btn-delete-hist { background: #e74c3c; font-size: 11px; padding: 4px 8px; }
         .btn-small   { padding: 4px 8px; font-size: 11px; }
@@ -129,6 +130,34 @@
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast.success { background: #27ae60; }
         .toast.error { background: #e74c3c; }
+
+        /* Гайд */
+        #guideOverlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 9998; justify-content: center; align-items: center;
+        }
+        #guideOverlay.show { display: flex; }
+        .guide-box {
+            background: white; border-radius: 16px; padding: 30px; max-width: 650px;
+            max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .guide-box h2 { color: #6a3d99; margin-top: 0; }
+        .guide-step {
+            background: #f8f4ff; border-left: 4px solid #8e44ad; border-radius: 8px;
+            padding: 12px 16px; margin-bottom: 12px;
+        }
+        .guide-step strong { color: #8e44ad; }
+        .guide-step .emoji { font-size: 20px; margin-right: 5px; }
+        .guide-btn-demo { margin-right: 5px; padding: 3px 8px; border-radius: 4px; font-size: 11px; color: white; display: inline-block; }
+        .guide-btn-demo.green { background: #27ae60; }
+        .guide-btn-demo.blue { background: #2980b9; }
+        .guide-btn-demo.orange { background: #f39c12; }
+        .guide-btn-demo.gray { background: #95a5a6; }
+        .guide-btn-demo.red { background: #e74c3c; }
+        .guide-close {
+            background: #8e44ad; color: white; border: none; padding: 10px 24px;
+            border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -138,6 +167,7 @@
     <div class="top-bar">
         <h2>🐱 Учёт баллов котят</h2>
         <div class="top-btns">
+            <button class="btn btn-guide" onclick="openGuide()">❓ Гайд</button>
             <button class="btn btn-history" onclick="toggleHistory()">📜 История</button>
             <button class="btn btn-reset" onclick="fullReset()">🗑 Полный сброс</button>
         </div>
@@ -175,9 +205,9 @@
             </label>
         </div>
         <div class="action-btns" style="margin-top:10px;">
-            <button class="btn btn-plus2" onclick="applyToAll(2)">🐾 ++ Всем (+2 балла, +1 раунд)</button>
-            <button class="btn btn-plus1" onclick="applyToAll(1)">🐾 + Всем (+1 балл, +1 раунд)</button>
-            <button class="btn btn-skip" onclick="applyToAll(0)">⏭ Скип всем (0 баллов, +1 раунд)</button>
+            <button class="btn btn-plus2" onclick="applyToAll(2)">🐾 ++ Всем (+2 балла)</button>
+            <button class="btn btn-plus1" onclick="applyToAll(1)">🐾 + Всем (+1 балл)</button>
+            <button class="btn btn-skip" onclick="applyToAll(0)">⏭ Скип всем (0 баллов)</button>
         </div>
     </div>
 
@@ -198,9 +228,73 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Гайд -->
+<div id="guideOverlay" onclick="closeGuideOutside(event)">
+    <div class="guide-box" onclick="event.stopPropagation()">
+        <h2>🐱 Как пользоваться</h2>
+        
+        <div class="guide-step">
+            <strong><span class="emoji">1️⃣</span> Добавь котят</strong><br>
+            Введи имя и ID по одному или вставь список:<br>
+            <code>что-то - Имя [ID]</code><br>
+            <small>Пример: <code>я - Барсик [12345]</code> → станет «Барсик», ID: 12345</small>
+        </div>
+
+        <div class="guide-step">
+            <strong><span class="emoji">2️⃣</span> Создай игру</strong><br>
+            Нажми <span class="guide-btn-demo green">🎮 + Новая игра</span> — всем котятам дадутся стартовые баллы.<br>
+            Галочка <b>«Игра недели»</b> даёт +4 вместо +2 (максимум 14 вместо 12).
+        </div>
+
+        <div class="guide-step">
+            <strong><span class="emoji">3️⃣</span> Кнопки в ячейке</strong><br>
+            <span class="guide-btn-demo green">++</span> добавляет 2 балла<br>
+            <span class="guide-btn-demo blue">+</span> добавляет 1 балл<br>
+            <span class="guide-btn-demo orange">0</span> обнуляет баллы за игру<br>
+            <span class="guide-btn-demo gray">⏭</span> пропуск игры (котёнок не играл)
+        </div>
+
+        <div class="guide-step">
+            <strong><span class="emoji">4️⃣</span> Кнопки «Всем»</strong><br>
+            <span class="guide-btn-demo green">++ Всем</span> 
+            <span class="guide-btn-demo blue">+ Всем</span> 
+            <span class="guide-btn-demo orange">Скип всем</span><br>
+            Применяются к тем, у кого нет 🔒 в текущем раунде.
+        </div>
+
+        <div class="guide-step">
+            <strong><span class="emoji">5️⃣</span> Замки 🔒 и раунды</strong><br>
+            Один котёнок = одно действие за раунд. Раунды считаются в столбце «Раунды».<br>
+            Когда <b>все</b> получили раунд — замки снимаются.
+        </div>
+
+        <div class="guide-step">
+            <strong><span class="emoji">6️⃣</span> Пропуск игр</strong><br>
+            <span class="guide-btn-demo gray">⏭</span> — пропустить конкретную игру.<br>
+            <b>«До»</b> и <b>«После»</b> — не играл до/после указанной игры.<br>
+            Можно комбинировать: До: 2 + пропуск игры 5 = не играл в 1,2,5.
+        </div>
+
+        <div class="guide-step">
+            <strong><span class="emoji">7️⃣</span> Новенькие</strong><br>
+            Котёнок добавленный позже: прошлые игры — «не играл»,<br>
+            текущая — стартовые баллы и раунды как у всех.
+        </div>
+
+        <div class="guide-step">
+            <strong><span class="emoji">8️⃣</span> Удаление</strong><br>
+            <span class="guide-btn-demo red">✕</span> в шапке — удалить игру.<br>
+            <span class="guide-btn-demo red">🗑</span> у котёнка — удалить котёнка.<br>
+            <b>🗑 Полный сброс</b> — очистить всё.
+        </div>
+
+        <button class="guide-close" onclick="closeGuide()">👍 Понятно, закрыть</button>
+    </div>
+</div>
+
 <script>
-    const MAIN_KEY = 'kittens_v17';
-    const HISTORY_KEY = 'kittens_v17_history';
+    const MAIN_KEY = 'kittens_v18';
+    const HISTORY_KEY = 'kittens_v18_history';
 
     let kittens = [];
     let gamesCount = 0;
@@ -220,6 +314,20 @@
         toast.className = 'toast ' + type + ' show';
         toastTimer = setTimeout(() => { toast.classList.remove('show'); }, 2500);
     }
+
+    // ==================== ГАЙД ====================
+    function openGuide() {
+        document.getElementById('guideOverlay').classList.add('show');
+    }
+    function closeGuide() {
+        document.getElementById('guideOverlay').classList.remove('show');
+    }
+    function closeGuideOutside(event) {
+        if (event.target === document.getElementById('guideOverlay')) closeGuide();
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeGuide();
+    });
 
     // ==================== ИСТОРИЯ ====================
     function getHistory() {
