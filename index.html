@@ -376,7 +376,7 @@
         document.getElementById('totalGames').value = gamesCount;
     }
 
-    function renderTable() {
+      function renderTable() {
         const container = document.getElementById('tableContainer');
         if (kittens.length === 0) {
             container.innerHTML = '<p style="color:#999;">Пока нет котят. Добавьте первого!</p>';
@@ -396,7 +396,7 @@
                 <br><button class="btn btn-del-game" onclick="deleteGame(${g})" title="Удалить игру ${g+1}">✕</button>
             </th>`;
         }
-        html += '<th class="total-col">Всего баллов</th><th class="rounds-col">Раунды</th><th>Не играл</th></tr></thead><tbody>';
+        html += '<th class="rounds-col">Раунды</th><th class="total-col">Всего баллов</th><th>Не играл</th></tr></thead><tbody>';
 
         kittens.forEach((k, ki) => {
             if (k.rounds === undefined) k.rounds = 0;
@@ -429,8 +429,8 @@
                 
                 html += `</td>`;
             }
-            html += `<td class="total-col">${total}</td>`;
             html += `<td class="rounds-col"><span class="round-badge">${k.rounds}</span></td>`;
+            html += `<td class="total-col">${total}</td>`;
             html += `<td style="font-size:11px;">
                 До: <input type="number" value="${k.notPlayedBefore || 0}" min="0" max="${gamesCount}" 
                     style="width:40px;" onchange="setNotPlayedBefore(${ki}, this.value)"><br>
