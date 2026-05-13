@@ -67,6 +67,7 @@
 
         .game-of-week { background: #ffd700; color: #333; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
         .inactive-game { opacity: 0.4; background: #f8f8f8; }
+        .new-kitten-game { background: #e8f5e9; }
 
         .round-badge {
             display: inline-block; background: #ff9800; color: white;
@@ -74,6 +75,10 @@
         }
         .locked-mark {
             display: inline-block; background: #e74c3c; color: white;
+            padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-top: 2px;
+        }
+        .new-badge {
+            display: inline-block; background: #27ae60; color: white;
             padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-top: 2px;
         }
 
@@ -130,6 +135,9 @@
             <input type="text" id="idInput" placeholder="ID">
             <button class="btn btn-add" onclick="addKitten()">Добавить</button>
         </div>
+        <div class="hint" style="margin-top:5px;">
+            При добавлении в середине игры: прошлые игры помечаются «не играл», текущая получает стартовые баллы.
+        </div>
     </div>
 
     <div class="card">
@@ -174,14 +182,14 @@
 </div>
 
 <script>
-    const MAIN_KEY = 'kittens_v14';
-    const HISTORY_KEY = 'kittens_v14_history';
+    const MAIN_KEY = 'kittens_v15';
+    const HISTORY_KEY = 'kittens_v15_history';
 
     let kittens = [];
     let gamesCount = 0;
     let gamesAreWeek = [];
     let lockedRounds = {};
-    let hasChanges = false; // Были ли изменения с момента открытия
+    let hasChanges = false;
 
     const MAX_POINTS = 12;
     const MAX_POINTS_WEEK = 14;
@@ -201,12 +209,11 @@
             lockedRounds: JSON.parse(JSON.stringify(lockedRounds)),
             date: new Date().toLocaleString('ru-RU')
         };
-        // Проверяем, не совпадает ли с последним сохранением
         if (history.length > 0) {
             let last = history[0];
             if (JSON.stringify(last.kittens) === JSON.stringify(snapshot.kittens) &&
                 last.gamesCount === snapshot.gamesCount) {
-                return; // Не сохраняем дубликат
+                return;
             }
         }
         history.unshift(snapshot);
@@ -228,14 +235,12 @@
         hasChanges = false;
     }
 
-    // Сохраняем в историю при закрытии/уходе
     window.addEventListener('beforeunload', function() {
         if (hasChanges && kittens.length > 0) {
             saveToHistory();
         }
     });
 
-    // Также сохраняем при сворачивании (для телефонов)
     window.addEventListener('pagehide', function() {
         if (hasChanges && kittens.length > 0) {
             saveToHistory();
@@ -251,7 +256,6 @@
         gamesAreWeek = snap.gamesAreWeek || [];
         lockedRounds = snap.lockedRounds || {};
         hasChanges = true;
-        // Сохраняем текущее состояние и в основное хранилище
         let data = { kittens, gamesCount, gamesAreWeek, lockedRounds };
         localStorage.setItem(MAIN_KEY, JSON.stringify(data));
         render();
@@ -365,7 +369,13 @@
         kittens.forEach((k, ki) => {
             if (k.rounds === undefined) k.rounds = 0;
             html += '<tr>';
-            html += `<td><span class="kitten-name">${esc(k.name)}</span><br><span class="kitten-id">ID: ${esc(k.id)}</span></td>`;
+            
+            // Индикатор "новенький"
+            let newBadge = '';
+            if (k.isNew) {
+                newBadge = ' <span class="new-badge">new</span>';
+            }
+            html += `<td><span class="kitten-name">${esc(k.name)}${newBadge}</span><br><span class="kitten-id">ID: ${esc(k.id)}</span></td>`;
 
             let total = 0;
             for (let g = 0; g < gamesCount; g++) {
@@ -373,6 +383,10 @@
                 let val = inactive ? 0 : getGameValue(k, g);
                 total += val;
                 let cellClass = inactive ? 'inactive-game' : '';
+                // Подсветка первой игры новенького
+                if (k.firstGame === g && !inactive) {
+                    cellClass += ' new-kitten-game';
+                }
                 let locked = isLocked(ki, g) && !inactive;
 
                 html += `<td class="${cellClass}" style="padding:4px;">
@@ -508,6 +522,42 @@
         return { name, id };
     }
 
+    // Создаёт нового котёнка с правильными настройками
+       // Создаёт нового котёнка с правильными настройками
+    function createKitten(name, id) {
+        let kitten = {
+            name, id,
+            notPlayedBefore: 0,
+            notPlayedAfter: 0,
+            games: new Array(gamesCount).fill(0),
+            rounds: 0,
+            isNew: gamesCount > 0,
+            firstGame: -1
+        };
+
+        if (gamesCount > 0) {
+            // Все игры до текущей — не играл
+            kitten.notPlayedBefore = gamesCount - 1;
+            kitten.firstGame = gamesCount - 1;
+            
+            // В текущей игре даём стартовые баллы
+            let isWeek = gamesAreWeek[gamesCount - 1];
+            kitten.games[gamesCount - 1] = isWeek ? 4 : 2;
+            
+            // Раунды — столько же, сколько у остальных в этой игре
+            // Находим максимальный раунд среди активных котят
+            let maxRounds = 0;
+            kittens.forEach(k => {
+                if (k.rounds !== undefined && k.rounds > maxRounds) {
+                    maxRounds = k.rounds;
+                }
+            });
+            kitten.rounds = maxRounds;
+        }
+
+        return kitten;
+    }
+
     function bulkAdd() {
         let text = document.getElementById('bulkInput').value.trim();
         if (!text) { alert('Вставь список!'); return; }
@@ -516,24 +566,35 @@
             let r = parseKittenLine(line);
             if (r) {
                 if (!kittens.some(k => k.id === r.id)) {
-                    kittens.push({ name: r.name, id: r.id, notPlayedBefore: 0, notPlayedAfter: 0, games: new Array(gamesCount).fill(0), rounds: 0 });
+                    kittens.push(createKitten(r.name, r.id));
                     added++;
                 } else skipped++;
             }
         });
         saveData(); render();
         document.getElementById('bulkInput').value = '';
-        alert(`Добавлено: ${added}${skipped > 0 ? `\nПропущено: ${skipped}` : ''}`);
+        let msg = `Добавлено: ${added}${skipped > 0 ? `\nПропущено: ${skipped}` : ''}`;
+        if (gamesCount > 0 && added > 0) {
+            msg += `\nНовенькие получили баллы за игру ${gamesCount}, прошлые игры — «не играл».`;
+        }
+        alert(msg);
     }
 
     function addKitten() {
         const name = document.getElementById('nameInput').value.trim();
         const id = document.getElementById('idInput').value.trim();
         if (!name || !id) { alert('Заполни имя и ID!'); return; }
-        kittens.push({ name, id, notPlayedBefore: 0, notPlayedAfter: 0, games: new Array(gamesCount).fill(0), rounds: 0 });
+        if (kittens.some(k => k.id === id)) {
+            alert('Котёнок с таким ID уже есть!');
+            return;
+        }
+        kittens.push(createKitten(name, id));
         saveData(); render();
         document.getElementById('nameInput').value = '';
         document.getElementById('idInput').value = '';
+        if (gamesCount > 0) {
+            alert(`Котёнок добавлен! Получил баллы за игру ${gamesCount}, прошлые игры — «не играл».`);
+        }
     }
 
     function deleteKitten(index) {
@@ -542,9 +603,16 @@
 
     function addNewGame() {
         const isWeek = document.getElementById('gameOfWeekCheck').checked;
+        const defaultPoints = isWeek ? 4 : 2;
         gamesCount++;
         gamesAreWeek.push(isWeek);
-        kittens.forEach(k => { if (!k.games) k.games = []; k.games.push(isWeek ? 4 : 2); k.rounds = 0; });
+        kittens.forEach(k => {
+            if (!k.games) k.games = [];
+            k.games.push(defaultPoints);
+            k.rounds = 0;
+            // Убираем пометку "новенький" у всех
+            k.isNew = false;
+        });
         lockedRounds[gamesCount - 1] = {};
         saveData(); render();
         document.getElementById('gameOfWeekCheck').checked = false;
