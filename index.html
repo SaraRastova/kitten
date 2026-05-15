@@ -30,7 +30,7 @@
         .btn-add      { background: #8e44ad; }
         .btn-bulk     { background: #e91e63; }
         .btn-game     { background: #27ae60; font-size: 14px; padding: 10px 20px; }
-        .btn-custom   { background: #6c5ce7; font-size: 14px; padding: 10px 20px; }
+        .btn-creative { background: #e17055; font-size: 14px; padding: 10px 20px; }
         .btn-plus3    { background: #00b894; }
         .btn-plus2    { background: #27ae60; }
         .btn-plus1    { background: #2980b9; }
@@ -72,7 +72,9 @@
         .action-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         .action-btns button { flex: 1; min-width: 80px; }
 
-        .game-of-week { background: #ffd700; color: #333; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+        .game-tag { font-size: 9px; padding: 1px 4px; border-radius: 3px; color: white; }
+        .game-tag.creative { background: #e17055; }
+        .game-tag.week { background: #ffd700; color: #333; }
         .inactive-game { opacity: 0.4; background: #f8f8f8; }
         .skipped-game { opacity: 0.5; background: #f0f0f0; text-decoration: line-through; }
         .new-kitten-game { background: #e8f5e9; }
@@ -134,21 +136,22 @@
         .toast.error { background: #e74c3c; }
 
         /* Оверлей */
-        #guideOverlay, #customGameOverlay {
+        #guideOverlay, #creativeGameOverlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); z-index: 9998; justify-content: center; align-items: center;
         }
-        #guideOverlay.show, #customGameOverlay.show { display: flex; }
-        .guide-box, .custom-box {
+        #guideOverlay.show, #creativeGameOverlay.show { display: flex; }
+        .guide-box, .creative-box {
             background: white; border-radius: 16px; padding: 30px; max-width: 650px;
             max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
-        .custom-box { text-align: center; }
-        .custom-box input {
+        .creative-box { text-align: center; }
+        .creative-box input {
             padding: 12px; font-size: 20px; width: 100px; text-align: center;
-            border: 2px solid #8e44ad; border-radius: 8px; margin: 10px 0;
+            border: 2px solid #e17055; border-radius: 8px; margin: 10px 0;
         }
-        .guide-box h2, .custom-box h2 { color: #6a3d99; margin-top: 0; }
+        .guide-box h2 { color: #6a3d99; margin-top: 0; }
+        .creative-box h2 { color: #e17055; margin-top: 0; }
         .guide-step {
             background: #f8f4ff; border-left: 4px solid #8e44ad; border-radius: 8px;
             padding: 12px 16px; margin-bottom: 12px;
@@ -162,10 +165,12 @@
         .guide-btn-demo.orange { background: #f39c12; }
         .guide-btn-demo.gray { background: #95a5a6; }
         .guide-btn-demo.red { background: #e74c3c; }
-        .guide-close, .custom-close {
+        .guide-btn-demo.coral { background: #e17055; }
+        .guide-close, .creative-close {
             background: #8e44ad; color: white; border: none; padding: 10px 24px;
             border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 10px;
         }
+        .creative-close { background: #999; }
     </style>
 </head>
 <body>
@@ -208,16 +213,13 @@
         <div class="table-wrap" id="tableContainer"></div>
         <div style="margin-top:15px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
             <button class="btn btn-game" onclick="addNewGame()">🎮 + Новая игра</button>
-            <button class="btn btn-custom" onclick="openCustomGame()">🎮 + Своя игра</button>
+            <button class="btn btn-creative" onclick="openCreativeGame()">🎨 + Твор. игры / др. баллы</button>
             <label style="cursor:pointer; font-size:14px;">
                 <input type="checkbox" id="gameOfWeekCheck"> Игра недели (+4 вместо +2, макс 14)
             </label>
         </div>
-        <div class="action-btns" style="margin-top:10px;">
-            <button class="btn btn-plus3" onclick="applyToAll(3)">🐾 +++ Всем (+3 балла)</button>
-            <button class="btn btn-plus2" onclick="applyToAll(2)">🐾 ++ Всем (+2 балла)</button>
-            <button class="btn btn-plus1" onclick="applyToAll(1)">🐾 + Всем (+1 балл)</button>
-            <button class="btn btn-skip" onclick="applyToAll(0)">⏭ Скип всем (0 баллов)</button>
+        <div class="action-btns" style="margin-top:10px;" id="actionButtons">
+            <!-- Кнопки отрисовываются динамически -->
         </div>
     </div>
 
@@ -243,21 +245,22 @@
     <div class="guide-box" onclick="event.stopPropagation()">
         <h2>🐱 Как пользоваться</h2>
         
-        <div class="guide-step">
+             <div class="guide-step">
             <strong><span class="emoji">1️⃣</span> Добавь котят</strong><br>
             Введи имя и ID по одному или вставь список:<br>
-            <code>что-то - Имя [ID]</code><br>
-            <small>Пример: <code>я - Барсик [12345]</code> → станет «Барсик», ID: 12345</small>
+            <code>что-то - Имя [ID]</code>
         </div>
 
         <div class="guide-step">
             <strong><span class="emoji">2️⃣</span> Создай игру</strong><br>
             <span class="guide-btn-demo green">🎮 + Новая игра</span> — всем +2 балла (или +4 для игры недели).<br>
-            <span class="guide-btn-demo teal">🎮 + Своя игра</span> — сам выбираешь сколько баллов дать.
+            <span class="guide-btn-demo coral">🎨 + Твор. игры / др. баллы</span> — сам выбираешь сколько баллов дать,<br>
+            <b>открывает кнопки +++</b>.
         </div>
 
-         <div class="guide-step">
+        <div class="guide-step">
             <strong><span class="emoji">3️⃣</span> Кнопки в ячейке</strong><br>
+            <span class="guide-btn-demo teal">+++</span> +3 балла <b>(только в твор. играх!)</b><br>
             <span class="guide-btn-demo green">++</span> добавляет 2 балла<br>
             <span class="guide-btn-demo blue">+</span> добавляет 1 балл<br>
             <span class="guide-btn-demo orange">0</span> 0 баллов, для скипов/зб<br>
@@ -266,6 +269,7 @@
 
         <div class="guide-step">
             <strong><span class="emoji">4️⃣</span> Кнопки «Всем»</strong><br>
+            <span class="guide-btn-demo teal">+++ Всем</span> <b>(только в твор. играх!)</b><br>
             <span class="guide-btn-demo green">++ Всем</span> 
             <span class="guide-btn-demo blue">+ Всем</span> 
             <span class="guide-btn-demo orange">Скип всем</span><br>
@@ -275,7 +279,7 @@
         <div class="guide-step">
             <strong><span class="emoji">5️⃣</span> Замки 🔒 и раунды</strong><br>
             Один котёнок = одно действие за раунд. Раунды считаются в столбце «Раунды».<br>
-            Когда 🔒 <b>есть</b>, котенок у которого он стоит, не получает больше баллов за раунд, можно спокойно остальным дать баллы через кнопку "всем", после замки снимаются.
+            Когда 🔒 <b>есть</b>, котенок у которого он стоит, не получает больше баллов за раунд, можно спокойно остальным дать баллы через кнопку «всем», после замки снимаются.
         </div>
 
         <div class="guide-step">
@@ -286,36 +290,44 @@
         </div>
 
         <div class="guide-step">
-            <strong><span class="emoji">7️⃣</span> Удаление</strong><br>
+            <strong><span class="emoji">7️⃣</span> Новенькие</strong><br>
+            Котёнок добавленный позже: прошлые игры — «не играл»,<br>
+            текущая — стартовые баллы и раунды как у всех.
+        </div>
+
+        <div class="guide-step">
+            <strong><span class="emoji">8️⃣</span> Удаление</strong><br>
             <span class="guide-btn-demo red">✕</span> в шапке — удалить игру.<br>
-            <span class="guide-btn-demo red">🗑</span> у котёнка — удалить котёнка.
+            <span class="guide-btn-demo red">🗑</span> у котёнка — удалить котёнка.<br>
+            <b>🗑 Полный сброс</b> — очистить всё.
         </div>
 
         <button class="guide-close" onclick="closeGuide()">👍 Понятно, закрыть</button>
     </div>
 </div>
 
-<!-- Своя игра -->
-<div id="customGameOverlay" onclick="closeCustomOutside(event)">
-    <div class="custom-box" onclick="event.stopPropagation()">
-        <h2>🎮 Своя игра</h2>
+<!-- Творческая игра -->
+<div id="creativeGameOverlay" onclick="closeCreativeOutside(event)">
+    <div class="creative-box" onclick="event.stopPropagation()">
+        <h2>🎨 Твор. игры / др. баллы</h2>
         <p>Сколько баллов дать <b>сразу всем</b> котятам?</p>
-        <input type="number" id="customPointsInput" value="3" min="0" max="12">
+        <input type="number" id="creativePointsInput" value="3" min="0" max="12">
         <p style="font-size:12px;color:#888;">Максимум: 12 (14 для игры недели)</p>
         <br>
-        <button class="btn btn-custom" onclick="addCustomGame()" style="font-size:16px;padding:12px 30px;">✅ Создать</button>
+        <button class="btn btn-creative" onclick="addCreativeGame()" style="font-size:16px;padding:12px 30px;">✅ Создать</button>
         <br>
-        <button class="custom-close" onclick="closeCustomGame()" style="background:#999;">Отмена</button>
+        <button class="creative-close" onclick="closeCreativeGame()">Отмена</button>
     </div>
 </div>
 
 <script>
-    const MAIN_KEY = 'kittens_v20';
-    const HISTORY_KEY = 'kittens_v20_history';
+    const MAIN_KEY = 'kittens_v21';
+    const HISTORY_KEY = 'kittens_v21_history';
 
     let kittens = [];
     let gamesCount = 0;
     let gamesAreWeek = [];
+    let gamesAreCreative = []; // true если игра творческая
     let lockedRounds = {};
     let hasChanges = false;
 
@@ -337,17 +349,17 @@
     function closeGuide() { document.getElementById('guideOverlay').classList.remove('show'); }
     function closeGuideOutside(e) { if (e.target === document.getElementById('guideOverlay')) closeGuide(); }
 
-    // ==================== СВОЯ ИГРА ====================
-    function openCustomGame() {
-        document.getElementById('customGameOverlay').classList.add('show');
-        document.getElementById('customPointsInput').value = 3;
-        document.getElementById('customPointsInput').focus();
+    // ==================== ТВОРЧЕСКАЯ ИГРА ====================
+    function openCreativeGame() {
+        document.getElementById('creativeGameOverlay').classList.add('show');
+        document.getElementById('creativePointsInput').value = 3;
+        document.getElementById('creativePointsInput').focus();
     }
-    function closeCustomGame() { document.getElementById('customGameOverlay').classList.remove('show'); }
-    function closeCustomOutside(e) { if (e.target === document.getElementById('customGameOverlay')) closeCustomGame(); }
+    function closeCreativeGame() { document.getElementById('creativeGameOverlay').classList.remove('show'); }
+    function closeCreativeOutside(e) { if (e.target === document.getElementById('creativeGameOverlay')) closeCreativeGame(); }
 
-    function addCustomGame() {
-        let points = parseInt(document.getElementById('customPointsInput').value);
+    function addCreativeGame() {
+        let points = parseInt(document.getElementById('creativePointsInput').value);
         if (isNaN(points) || points < 0) { showToast('Введи число!', 'error'); return; }
         const isWeek = document.getElementById('gameOfWeekCheck').checked;
         const max = isWeek ? MAX_POINTS_WEEK : MAX_POINTS;
@@ -355,6 +367,7 @@
 
         gamesCount++;
         gamesAreWeek.push(isWeek);
+        gamesAreCreative.push(true);
         kittens.forEach(k => {
             if (!k.games) k.games = [];
             k.games.push(points);
@@ -364,12 +377,12 @@
         lockedRounds[gamesCount - 1] = {};
         saveData(); render();
         document.getElementById('gameOfWeekCheck').checked = false;
-        document.getElementById('customGameOverlay').classList.remove('show');
-        showToast(`🎮 Создана игра с +${points} баллов!`, 'success');
+        document.getElementById('creativeGameOverlay').classList.remove('show');
+        showToast(`🎨 Творческая игра с +${points} баллов!`, 'success');
     }
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') { closeGuide(); closeCustomGame(); }
+        if (e.key === 'Escape') { closeGuide(); closeCreativeGame(); }
     });
 
     // ==================== ИСТОРИЯ ====================
@@ -384,6 +397,7 @@
         let snapshot = {
             kittens: JSON.parse(JSON.stringify(kittens)),
             gamesCount, gamesAreWeek: [...gamesAreWeek],
+            gamesAreCreative: [...gamesAreCreative],
             lockedRounds: JSON.parse(JSON.stringify(lockedRounds)),
             date: new Date().toLocaleString('ru-RU')
         };
@@ -395,12 +409,12 @@
     }
 
     function saveData() {
-        localStorage.setItem(MAIN_KEY, JSON.stringify({ kittens, gamesCount, gamesAreWeek, lockedRounds }));
+        localStorage.setItem(MAIN_KEY, JSON.stringify({ kittens, gamesCount, gamesAreWeek, gamesAreCreative, lockedRounds }));
         hasChanges = true;
     }
 
     function loadData() {
-        kittens = []; gamesCount = 0; gamesAreWeek = []; lockedRounds = {}; hasChanges = false;
+        kittens = []; gamesCount = 0; gamesAreWeek = []; gamesAreCreative = []; lockedRounds = {}; hasChanges = false;
     }
 
     window.addEventListener('beforeunload', () => saveToHistory());
@@ -409,7 +423,8 @@
     function restoreFromHistory(index) {
         let snap = getHistory()[index];
         kittens = snap.kittens || []; gamesCount = snap.gamesCount || 0;
-        gamesAreWeek = snap.gamesAreWeek || []; lockedRounds = snap.lockedRounds || {};
+        gamesAreWeek = snap.gamesAreWeek || []; gamesAreCreative = snap.gamesAreCreative || [];
+        lockedRounds = snap.lockedRounds || {};
         hasChanges = true; saveData(); render();
         document.getElementById('historyPanel').style.display = 'none';
         showToast('✅ Данные восстановлены!', 'success');
@@ -441,13 +456,17 @@
 
     function fullReset() {
         localStorage.removeItem(MAIN_KEY); localStorage.removeItem(HISTORY_KEY);
-        kittens = []; gamesCount = 0; gamesAreWeek = []; lockedRounds = {}; hasChanges = false;
+        kittens = []; gamesCount = 0; gamesAreWeek = []; gamesAreCreative = []; lockedRounds = {}; hasChanges = false;
         render(); document.getElementById('historyPanel').style.display = 'none';
         showToast('🗑 Всё сброшено');
     }
 
     function getMaxPoints(gameIndex) {
         return gamesAreWeek[gameIndex] ? MAX_POINTS_WEEK : MAX_POINTS;
+    }
+
+    function isCreativeGame(gameIndex) {
+        return gamesAreCreative[gameIndex] === true;
     }
 
     function allKittensLockedInGame(gi) {
@@ -468,7 +487,29 @@
     }
 
     // ==================== ОТРИСОВКА ====================
-    function render() { renderTable(); renderReport(); document.getElementById('totalGames').value = gamesCount; }
+    function render() {
+        renderTable();
+        renderActionButtons();
+        renderReport();
+        document.getElementById('totalGames').value = gamesCount;
+    }
+
+    function renderActionButtons() {
+        const container = document.getElementById('actionButtons');
+        let html = '';
+        
+        // Всегда показываем ++, +, скип
+        html += '<button class="btn btn-plus2" onclick="applyToAll(2)">🐾 ++ Всем (+2 балла)</button>';
+        html += '<button class="btn btn-plus1" onclick="applyToAll(1)">🐾 + Всем (+1 балл)</button>';
+        html += '<button class="btn btn-skip" onclick="applyToAll(0)">⏭ Скип всем (0 баллов)</button>';
+        
+        // +++ показываем только если последняя игра творческая
+        if (gamesCount > 0 && isCreativeGame(gamesCount - 1)) {
+            html = '<button class="btn btn-plus3" onclick="applyToAll(3)">🐾 +++ Всем (+3 балла)</button>' + html;
+        }
+        
+        container.innerHTML = html;
+    }
 
     function renderTable() {
         const c = document.getElementById('tableContainer');
@@ -477,7 +518,10 @@
 
         let html = '<table><thead><tr><th>Котёнок</th>';
         for (let g = 0; g < gamesCount; g++) {
-            html += `<th>Игра ${g+1}${gamesAreWeek[g]?' <span class="game-of-week">⭐неделя</span>':''}<br><small>(макс ${getMaxPoints(g)})</small><br><button class="btn btn-del-game" onclick="deleteGame(${g})">✕</button></th>`;
+            let tags = '';
+            if (gamesAreWeek[g]) tags += ' <span class="game-tag week">⭐неделя</span>';
+            if (gamesAreCreative[g]) tags += ' <span class="game-tag creative">🎨твор.</span>';
+            html += `<th>Игра ${g+1}${tags}<br><small>(макс ${getMaxPoints(g)})</small><br><button class="btn btn-del-game" onclick="deleteGame(${g})">✕</button></th>`;
         }
         html += '<th class="rounds-col">Раунды</th><th class="total-col">Всего баллов</th><th>Не играл</th></tr></thead><tbody>';
 
@@ -493,16 +537,19 @@
                 let cls = inactive ? 'inactive-game' : (skipped ? 'skipped-game' : '');
                 if (k.firstGame === g && !inactive && !skipped) cls += ' new-kitten-game';
                 let locked = isLocked(ki, g) && !inactive && !skipped;
+                let creative = isCreativeGame(g);
 
                 html += `<td class="${cls}" style="padding:4px;"><div class="points-cell">${val}</div>`;
                 if (skipped) html += `<span class="skipped-badge">пропуск</span><br><button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">↩ вернуть</button>`;
                 else if (locked) html += `<span class="locked-mark">🔒</span>`;
-                else if (!inactive) html += `<div class="game-btns">
-                    <button class="btn btn-plus3 btn-small" onclick="addToGame(${ki},${g},3)">+++</button>
-                    <button class="btn btn-plus2 btn-small" onclick="addToGame(${ki},${g},2)">++</button>
-                    <button class="btn btn-plus1 btn-small" onclick="addToGame(${ki},${g},1)">+</button>
-                    <button class="btn btn-skip btn-small" onclick="addRoundOnly(${ki},${g})">0</button>
-                    <button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">⏭</button></div>`;
+                else if (!inactive) {
+                    html += '<div class="game-btns">';
+                    if (creative) html += `<button class="btn btn-plus3 btn-small" onclick="addToGame(${ki},${g},3)">+++</button>`;
+                    html += `<button class="btn btn-plus2 btn-small" onclick="addToGame(${ki},${g},2)">++</button>
+                        <button class="btn btn-plus1 btn-small" onclick="addToGame(${ki},${g},1)">+</button>
+                        <button class="btn btn-skip btn-small" onclick="addRoundOnly(${ki},${g})">0</button>
+                        <button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">⏭</button></div>`;
+                }
                 else html += `<button class="btn btn-skip-game" onclick="toggleSkipNotPlayed(${ki},${g})">↩ играть</button>`;
                 html += `</td>`;
             }
@@ -569,7 +616,9 @@
     function deleteGame(gameIndex) {
         if (gamesCount <= 1) { showToast('Нельзя удалить последнюю игру', 'error'); return; }
         let gameNum = gameIndex + 1;
-        gamesAreWeek.splice(gameIndex, 1); gamesCount--;
+        gamesAreWeek.splice(gameIndex, 1);
+        gamesAreCreative.splice(gameIndex, 1);
+        gamesCount--;
         kittens.forEach(k => {
             if (k.games) k.games.splice(gameIndex, 1);
             if (k.skippedGames) {
@@ -625,7 +674,14 @@
         if (gamesCount > 0) {
             kitten.notPlayedBefore = gamesCount - 1;
             kitten.firstGame = gamesCount - 1;
-            kitten.games[gamesCount - 1] = gamesAreWeek[gamesCount - 1] ? 4 : 2;
+            let points = 2;
+            if (gamesAreWeek[gamesCount - 1]) points = 4;
+            if (gamesAreCreative[gamesCount - 1]) points = 3;
+            // Ищем какие баллы у других в этой игре
+            let otherPoints = null;
+            kittens.forEach(k => { if (k.games && k.games[gamesCount-1] !== undefined) otherPoints = k.games[gamesCount-1]; });
+            if (otherPoints !== null) points = otherPoints;
+            kitten.games[gamesCount - 1] = points;
             let maxRounds = 0;
             kittens.forEach(k => { if (k.rounds !== undefined && k.rounds > maxRounds) maxRounds = k.rounds; });
             kitten.rounds = maxRounds;
@@ -673,6 +729,7 @@
         const defaultPoints = isWeek ? 4 : 2;
         gamesCount++;
         gamesAreWeek.push(isWeek);
+        gamesAreCreative.push(false);
         kittens.forEach(k => {
             if (!k.games) k.games = [];
             k.games.push(defaultPoints);
