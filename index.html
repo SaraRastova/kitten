@@ -27,21 +27,23 @@
             transition: background 0.2s;
         }
         .btn:hover { opacity: 0.85; }
-        .btn-add     { background: #8e44ad; }
-        .btn-bulk    { background: #e91e63; }
-        .btn-game    { background: #27ae60; font-size: 14px; padding: 10px 20px; }
-        .btn-plus2   { background: #27ae60; }
-        .btn-plus1   { background: #2980b9; }
-        .btn-skip    { background: #f39c12; }
-        .btn-del     { background: #e74c3c; }
+        .btn-add      { background: #8e44ad; }
+        .btn-bulk     { background: #e91e63; }
+        .btn-game     { background: #27ae60; font-size: 14px; padding: 10px 20px; }
+        .btn-custom   { background: #6c5ce7; font-size: 14px; padding: 10px 20px; }
+        .btn-plus3    { background: #00b894; }
+        .btn-plus2    { background: #27ae60; }
+        .btn-plus1    { background: #2980b9; }
+        .btn-skip     { background: #f39c12; }
+        .btn-del      { background: #e74c3c; }
         .btn-del-game { background: #c0392b; font-size: 11px; padding: 3px 7px; }
-        .btn-copy    { background: #6c5ce7; font-size: 14px; padding: 10px 20px; }
-        .btn-reset   { background: #c0392b; font-size: 13px; padding: 8px 16px; }
-        .btn-history { background: #e67e22; font-size: 13px; padding: 8px 16px; }
-        .btn-guide   { background: #3498db; font-size: 13px; padding: 8px 16px; }
-        .btn-restore { background: #8e44ad; font-size: 11px; padding: 4px 10px; }
+        .btn-copy     { background: #6c5ce7; font-size: 14px; padding: 10px 20px; }
+        .btn-reset    { background: #c0392b; font-size: 13px; padding: 8px 16px; }
+        .btn-history  { background: #e67e22; font-size: 13px; padding: 8px 16px; }
+        .btn-guide    { background: #3498db; font-size: 13px; padding: 8px 16px; }
+        .btn-restore  { background: #8e44ad; font-size: 11px; padding: 4px 10px; }
         .btn-delete-hist { background: #e74c3c; font-size: 11px; padding: 4px 8px; }
-        .btn-small   { padding: 4px 8px; font-size: 11px; }
+        .btn-small    { padding: 4px 8px; font-size: 11px; }
         .btn-skip-game { background: #95a5a6; font-size: 10px; padding: 2px 6px; }
 
         .top-bar {
@@ -65,10 +67,10 @@
         .total-col   { background: #f5e6ff; font-weight: bold; font-size: 17px; }
         .rounds-col  { background: #fff3e0; font-weight: bold; font-size: 15px; }
 
-        .game-btns { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+        .game-btns { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
 
         .action-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        .action-btns button { flex: 1; min-width: 100px; }
+        .action-btns button { flex: 1; min-width: 80px; }
 
         .game-of-week { background: #ffd700; color: #333; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
         .inactive-game { opacity: 0.4; background: #f8f8f8; }
@@ -131,17 +133,22 @@
         .toast.success { background: #27ae60; }
         .toast.error { background: #e74c3c; }
 
-        /* Гайд */
-        #guideOverlay {
+        /* Оверлей */
+        #guideOverlay, #customGameOverlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); z-index: 9998; justify-content: center; align-items: center;
         }
-        #guideOverlay.show { display: flex; }
-        .guide-box {
+        #guideOverlay.show, #customGameOverlay.show { display: flex; }
+        .guide-box, .custom-box {
             background: white; border-radius: 16px; padding: 30px; max-width: 650px;
             max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
-        .guide-box h2 { color: #6a3d99; margin-top: 0; }
+        .custom-box { text-align: center; }
+        .custom-box input {
+            padding: 12px; font-size: 20px; width: 100px; text-align: center;
+            border: 2px solid #8e44ad; border-radius: 8px; margin: 10px 0;
+        }
+        .guide-box h2, .custom-box h2 { color: #6a3d99; margin-top: 0; }
         .guide-step {
             background: #f8f4ff; border-left: 4px solid #8e44ad; border-radius: 8px;
             padding: 12px 16px; margin-bottom: 12px;
@@ -151,10 +158,11 @@
         .guide-btn-demo { margin-right: 5px; padding: 3px 8px; border-radius: 4px; font-size: 11px; color: white; display: inline-block; }
         .guide-btn-demo.green { background: #27ae60; }
         .guide-btn-demo.blue { background: #2980b9; }
+        .guide-btn-demo.teal { background: #00b894; }
         .guide-btn-demo.orange { background: #f39c12; }
         .guide-btn-demo.gray { background: #95a5a6; }
         .guide-btn-demo.red { background: #e74c3c; }
-        .guide-close {
+        .guide-close, .custom-close {
             background: #8e44ad; color: white; border: none; padding: 10px 24px;
             border-radius: 8px; font-size: 14px; cursor: pointer; margin-top: 10px;
         }
@@ -200,11 +208,13 @@
         <div class="table-wrap" id="tableContainer"></div>
         <div style="margin-top:15px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
             <button class="btn btn-game" onclick="addNewGame()">🎮 + Новая игра</button>
+            <button class="btn btn-custom" onclick="openCustomGame()">🎮 + Своя игра</button>
             <label style="cursor:pointer; font-size:14px;">
                 <input type="checkbox" id="gameOfWeekCheck"> Игра недели (+4 вместо +2, макс 14)
             </label>
         </div>
         <div class="action-btns" style="margin-top:10px;">
+            <button class="btn btn-plus3" onclick="applyToAll(3)">🐾 +++ Всем (+3 балла)</button>
             <button class="btn btn-plus2" onclick="applyToAll(2)">🐾 ++ Всем (+2 балла)</button>
             <button class="btn btn-plus1" onclick="applyToAll(1)">🐾 + Всем (+1 балл)</button>
             <button class="btn btn-skip" onclick="applyToAll(0)">⏭ Скип всем (0 баллов)</button>
@@ -242,11 +252,11 @@
 
         <div class="guide-step">
             <strong><span class="emoji">2️⃣</span> Создай игру</strong><br>
-            Нажми <span class="guide-btn-demo green">🎮 + Новая игра</span> — всем котятам дадутся стартовые баллы.<br>
-            Галочка <b>«Игра недели»</b> даёт +4 вместо +2 (максимум 14 вместо 12).
+            <span class="guide-btn-demo green">🎮 + Новая игра</span> — всем +2 балла (или +4 для игры недели).<br>
+            <span class="guide-btn-demo teal">🎮 + Своя игра</span> — сам выбираешь сколько баллов дать.
         </div>
 
-        <div class="guide-step">
+         <div class="guide-step">
             <strong><span class="emoji">3️⃣</span> Кнопки в ячейке</strong><br>
             <span class="guide-btn-demo green">++</span> добавляет 2 балла<br>
             <span class="guide-btn-demo blue">+</span> добавляет 1 балл<br>
@@ -276,25 +286,32 @@
         </div>
 
         <div class="guide-step">
-            <strong><span class="emoji">7️⃣</span> Новенькие</strong><br>
-            Котёнок добавленный позже: прошлые игры — «не играл»,<br>
-            текущая — стартовые баллы и раунды как у всех.
-        </div>
-
-        <div class="guide-step">
-            <strong><span class="emoji">8️⃣</span> Удаление</strong><br>
+            <strong><span class="emoji">7️⃣</span> Удаление</strong><br>
             <span class="guide-btn-demo red">✕</span> в шапке — удалить игру.<br>
-            <span class="guide-btn-demo red">🗑</span> у котёнка — удалить котёнка.<br>
-            <b>🗑 Полный сброс</b> — очистить всё.
+            <span class="guide-btn-demo red">🗑</span> у котёнка — удалить котёнка.
         </div>
 
         <button class="guide-close" onclick="closeGuide()">👍 Понятно, закрыть</button>
     </div>
 </div>
 
+<!-- Своя игра -->
+<div id="customGameOverlay" onclick="closeCustomOutside(event)">
+    <div class="custom-box" onclick="event.stopPropagation()">
+        <h2>🎮 Своя игра</h2>
+        <p>Сколько баллов дать <b>сразу всем</b> котятам?</p>
+        <input type="number" id="customPointsInput" value="3" min="0" max="12">
+        <p style="font-size:12px;color:#888;">Максимум: 12 (14 для игры недели)</p>
+        <br>
+        <button class="btn btn-custom" onclick="addCustomGame()" style="font-size:16px;padding:12px 30px;">✅ Создать</button>
+        <br>
+        <button class="custom-close" onclick="closeCustomGame()" style="background:#999;">Отмена</button>
+    </div>
+</div>
+
 <script>
-    const MAIN_KEY = 'kittens_v18';
-    const HISTORY_KEY = 'kittens_v18_history';
+    const MAIN_KEY = 'kittens_v19';
+    const HISTORY_KEY = 'kittens_v19_history';
 
     let kittens = [];
     let gamesCount = 0;
@@ -316,17 +333,46 @@
     }
 
     // ==================== ГАЙД ====================
-    function openGuide() {
-        document.getElementById('guideOverlay').classList.add('show');
+    function openGuide() { document.getElementById('guideOverlay').classList.add('show'); }
+    function closeGuide() { document.getElementById('guideOverlay').classList.remove('show'); }
+    function closeGuideOutside(e) { if (e.target === document.getElementById('guideOverlay')) closeGuide(); }
+
+    // ==================== СВОЯ ИГРА ====================
+    function openCustomGame() {
+        document.getElementById('customGameOverlay').classList.add('show');
+        document.getElementById('customPointsInput').value = 3;
+        document.getElementById('customPointsInput').focus();
     }
-    function closeGuide() {
-        document.getElementById('guideOverlay').classList.remove('show');
+    function closeCustomGame() { document.getElementById('customGameOverlay').classList.remove('show'); }
+    function closeCustomOutside(e) { if (e.target === document.getElementById('customGameOverlay')) closeCustomGame(); }
+
+    function addCustomGame() {
+        let points = parseInt(document.getElementById('customPointsInput').value);
+        if (isNaN(points) || points < 0) { showToast('Введи число!', 'error'); return; }
+        const isWeek = document.getElementById('gameOfWeekCheck').checked;
+        const max = isWeek ? MAX_POINTS_WEEK : MAX_POINTS;
+        if (points > max) points = max;
+
+        gamesCount++;
+        gamesAreWeek.push(isWeek);
+        kittens.forEach(k => {
+            if (!k.games) k.games = [];
+            k.games.push(points);
+            k.rounds = 0;
+            k.isNew = false;
+        });
+        lockedRounds[gamesCount - 1] = {};
+        saveData(); render();
+        document.getElementById('gameOfWeekCheck').checked = false;
+        document.getElementById('customGameOverlay').classList.remove('show');
+        showToast(`🎮 Создана игра с +${points} баллов!`, 'success');
     }
-    function closeGuideOutside(event) {
-        if (event.target === document.getElementById('guideOverlay')) closeGuide();
-    }
+
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeGuide();
+        if (e.key === 'Escape') { closeGuide(); closeCustomGame(); }
+    });
+    document.getElementById('customPointsInput')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') addCustomGame();
     });
 
     // ==================== ИСТОРИЯ ====================
@@ -340,24 +386,19 @@
         let history = getHistory();
         let snapshot = {
             kittens: JSON.parse(JSON.stringify(kittens)),
-            gamesCount: gamesCount,
-            gamesAreWeek: JSON.parse(JSON.stringify(gamesAreWeek)),
+            gamesCount, gamesAreWeek: [...gamesAreWeek],
             lockedRounds: JSON.parse(JSON.stringify(lockedRounds)),
             date: new Date().toLocaleString('ru-RU')
         };
-        if (history.length > 0) {
-            let last = history[0];
-            if (JSON.stringify(last.kittens) === JSON.stringify(snapshot.kittens) &&
-                last.gamesCount === snapshot.gamesCount) return;
-        }
+        if (history.length > 0 && JSON.stringify(history[0].kittens) === JSON.stringify(snapshot.kittens) &&
+            history[0].gamesCount === snapshot.gamesCount) return;
         history.unshift(snapshot);
         if (history.length > 3) history = history.slice(0, 3);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     }
 
     function saveData() {
-        let data = { kittens, gamesCount, gamesAreWeek, lockedRounds };
-        localStorage.setItem(MAIN_KEY, JSON.stringify(data));
+        localStorage.setItem(MAIN_KEY, JSON.stringify({ kittens, gamesCount, gamesAreWeek, lockedRounds }));
         hasChanges = true;
     }
 
@@ -369,63 +410,42 @@
     window.addEventListener('pagehide', () => saveToHistory());
 
     function restoreFromHistory(index) {
-        let history = getHistory();
-        let snap = history[index];
-        kittens = snap.kittens || [];
-        gamesCount = snap.gamesCount || 0;
-        gamesAreWeek = snap.gamesAreWeek || [];
-        lockedRounds = snap.lockedRounds || {};
-        hasChanges = true;
-        saveData();
-        render();
+        let snap = getHistory()[index];
+        kittens = snap.kittens || []; gamesCount = snap.gamesCount || 0;
+        gamesAreWeek = snap.gamesAreWeek || []; lockedRounds = snap.lockedRounds || {};
+        hasChanges = true; saveData(); render();
         document.getElementById('historyPanel').style.display = 'none';
         showToast('✅ Данные восстановлены!', 'success');
     }
 
     function deleteHistory(index) {
-        let history = getHistory();
-        history.splice(index, 1);
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-        renderHistory();
+        let h = getHistory(); h.splice(index, 1);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); renderHistory();
     }
 
     function renderHistory() {
-        let container = document.getElementById('historyList');
-        let history = getHistory();
-        if (history.length === 0) {
-            container.innerHTML = '<p style="color:#888;">История пуста.</p>';
-            return;
-        }
-        container.innerHTML = history.map((h, i) => `
+        let c = document.getElementById('historyList'), h = getHistory();
+        if (h.length === 0) { c.innerHTML = '<p style="color:#888;">История пуста.</p>'; return; }
+        c.innerHTML = h.map((x, i) => `
             <div class="history-item">
-                <div class="history-info">
-                    <strong>Сохранение ${i + 1}</strong>
-                    <small>${h.date} | Котят: ${h.kittens.length} | Игр: ${h.gamesCount}</small>
-                </div>
+                <div class="history-info"><strong>Сохранение ${i+1}</strong><small>${x.date} | Котят: ${x.kittens.length} | Игр: ${x.gamesCount}</small></div>
                 <div>
                     <button class="btn btn-restore" onclick="restoreFromHistory(${i})">📥 Восстановить</button>
                     <button class="btn btn-delete-hist" onclick="deleteHistory(${i})">✕</button>
                 </div>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
 
     function toggleHistory() {
-        let panel = document.getElementById('historyPanel');
-        if (panel.style.display === 'none' || panel.style.display === '') {
-            panel.style.display = 'block';
-            renderHistory();
-        } else {
-            panel.style.display = 'none';
-        }
+        let p = document.getElementById('historyPanel');
+        if (p.style.display === 'none' || p.style.display === '') { p.style.display = 'block'; renderHistory(); }
+        else p.style.display = 'none';
     }
 
     function fullReset() {
-        localStorage.removeItem(MAIN_KEY);
-        localStorage.removeItem(HISTORY_KEY);
+        localStorage.removeItem(MAIN_KEY); localStorage.removeItem(HISTORY_KEY);
         kittens = []; gamesCount = 0; gamesAreWeek = []; lockedRounds = {}; hasChanges = false;
-        render();
-        document.getElementById('historyPanel').style.display = 'none';
+        render(); document.getElementById('historyPanel').style.display = 'none';
         showToast('🗑 Всё сброшено');
     }
 
@@ -433,341 +453,105 @@
         return gamesAreWeek[gameIndex] ? MAX_POINTS_WEEK : MAX_POINTS;
     }
 
-    function allKittensLockedInGame(gameIndex) {
+    function allKittensLockedInGame(gi) {
         if (kittens.length === 0) return false;
-        return kittens.every((k, ki) => isLocked(ki, gameIndex) || isGameInactive(k, gameIndex) || isGameSkipped(k, gameIndex));
+        return kittens.every((k, ki) => isLocked(ki, gi) || isGameInactive(k, gi) || isGameSkipped(k, gi));
     }
 
-    function isLocked(kittenIndex, gameIndex) {
-        if (!lockedRounds[gameIndex]) return false;
-        return lockedRounds[gameIndex][kittenIndex] === true;
-    }
+    function isLocked(ki, gi) { return lockedRounds[gi]?.[ki] === true; }
+    function lock(ki, gi) { if (!lockedRounds[gi]) lockedRounds[gi] = {}; lockedRounds[gi][ki] = true; }
+    function unlockAll(gi) { if (!lockedRounds[gi]) lockedRounds[gi] = {}; kittens.forEach((k, ki) => lockedRounds[gi][ki] = false); }
+    function isGameSkipped(k, gi) { return k.skippedGames?.[gi] === true; }
 
-    function lock(kittenIndex, gameIndex) {
-        if (!lockedRounds[gameIndex]) lockedRounds[gameIndex] = {};
-        lockedRounds[gameIndex][kittenIndex] = true;
-    }
-
-    function unlockAll(gameIndex) {
-        if (!lockedRounds[gameIndex]) lockedRounds[gameIndex] = {};
-        kittens.forEach((k, ki) => { lockedRounds[gameIndex][ki] = false; });
-    }
-
-    function isGameSkipped(kitten, gameIndex) {
-        if (!kitten.skippedGames) return false;
-        return kitten.skippedGames[gameIndex] === true;
-    }
-
-    function toggleSkipGame(kittenIndex, gameIndex) {
-        if (!kittens[kittenIndex].skippedGames) kittens[kittenIndex].skippedGames = {};
-        if (kittens[kittenIndex].skippedGames[gameIndex]) {
-            delete kittens[kittenIndex].skippedGames[gameIndex];
-        } else {
-            kittens[kittenIndex].skippedGames[gameIndex] = true;
-            if (!kittens[kittenIndex].games) kittens[kittenIndex].games = [];
-            kittens[kittenIndex].games[gameIndex] = 0;
-        }
+    function toggleSkipGame(ki, gi) {
+        if (!kittens[ki].skippedGames) kittens[ki].skippedGames = {};
+        if (kittens[ki].skippedGames[gi]) delete kittens[ki].skippedGames[gi];
+        else { kittens[ki].skippedGames[gi] = true; if (!kittens[ki].games) kittens[ki].games = []; kittens[ki].games[gi] = 0; }
         saveData(); render();
     }
 
     // ==================== ОТРИСОВКА ====================
-    function render() {
-        renderTable();
-        renderReport();
-        document.getElementById('totalGames').value = gamesCount;
-    }
+    function render() { renderTable(); renderReport(); document.getElementById('totalGames').value = gamesCount; }
 
     function renderTable() {
-        const container = document.getElementById('tableContainer');
-        if (kittens.length === 0) {
-            container.innerHTML = '<p style="color:#999;">Пока нет котят. Добавьте первого!</p>';
-            return;
-        }
-        if (gamesCount === 0) {
-            container.innerHTML = '<p style="color:#999;">Нет игр. Нажмите «+ Новая игра».</p>';
-            return;
-        }
+        const c = document.getElementById('tableContainer');
+        if (kittens.length === 0) { c.innerHTML = '<p style="color:#999;">Пока нет котят.</p>'; return; }
+        if (gamesCount === 0) { c.innerHTML = '<p style="color:#999;">Нет игр.</p>'; return; }
 
         let html = '<table><thead><tr><th>Котёнок</th>';
         for (let g = 0; g < gamesCount; g++) {
-            let max = getMaxPoints(g);
-            html += `<th>Игра ${g+1}${gamesAreWeek[g] ? ' <span class="game-of-week">⭐неделя</span>' : ''}<br><small>(макс ${max})</small><br><button class="btn btn-del-game" onclick="deleteGame(${g})">✕</button></th>`;
+            html += `<th>Игра ${g+1}${gamesAreWeek[g]?' <span class="game-of-week">⭐неделя</span>':''}<br><small>(макс ${getMaxPoints(g)})</small><br><button class="btn btn-del-game" onclick="deleteGame(${g})">✕</button></th>`;
         }
         html += '<th class="rounds-col">Раунды</th><th class="total-col">Всего баллов</th><th>Не играл</th></tr></thead><tbody>';
 
         kittens.forEach((k, ki) => {
             if (k.rounds === undefined) k.rounds = 0;
             html += '<tr>';
-            let badges = '';
-            if (k.isNew) badges += ' <span class="new-badge">new</span>';
-            html += `<td><span class="kitten-name">${esc(k.name)}${badges}</span><br><span class="kitten-id">ID: ${esc(k.id)}</span></td>`;
-
+            html += `<td><span class="kitten-name">${esc(k.name)}${k.isNew?' <span class="new-badge">new</span>':''}</span><br><span class="kitten-id">ID: ${esc(k.id)}</span></td>`;
             let total = 0;
             for (let g = 0; g < gamesCount; g++) {
-                let inactive = isGameInactive(k, g);
-                let skipped = isGameSkipped(k, g);
+                let inactive = isGameInactive(k, g), skipped = isGameSkipped(k, g);
                 let val = (inactive || skipped) ? 0 : getGameValue(k, g);
                 if (!inactive && !skipped) total += val;
-                let cellClass = inactive ? 'inactive-game' : '';
-                if (skipped) cellClass = 'skipped-game';
-                if (k.firstGame === g && !inactive && !skipped) cellClass += ' new-kitten-game';
+                let cls = inactive ? 'inactive-game' : (skipped ? 'skipped-game' : '');
+                if (k.firstGame === g && !inactive && !skipped) cls += ' new-kitten-game';
                 let locked = isLocked(ki, g) && !inactive && !skipped;
 
-                html += `<td class="${cellClass}" style="padding:4px;"><div class="points-cell">${val}</div>`;
-                if (skipped) {
-                    html += `<span class="skipped-badge">пропуск</span><br><button class="btn btn-skip-game" onclick="toggleSkipGame(${ki}, ${g})">↩ вернуть</button>`;
-                } else if (locked) {
-                    html += `<span class="locked-mark">🔒</span>`;
-                } else if (!inactive) {
-                    html += `<div class="game-btns">
-                        <button class="btn btn-plus2 btn-small" onclick="addToGame(${ki}, ${g}, 2)">++</button>
-                        <button class="btn btn-plus1 btn-small" onclick="addToGame(${ki}, ${g}, 1)">+</button>
-                        <button class="btn btn-skip btn-small" onclick="addRoundOnly(${ki}, ${g})">0</button>
-                        <button class="btn btn-skip-game" onclick="toggleSkipGame(${ki}, ${g})">⏭</button>
-                    </div>`;
-                } else {
-                    html += `<button class="btn btn-skip-game" onclick="toggleSkipNotPlayed(${ki}, ${g})">↩ играть</button>`;
-                }
+                html += `<td class="${cls}" style="padding:4px;"><div class="points-cell">${val}</div>`;
+                if (skipped) html += `<span class="skipped-badge">пропуск</span><br><button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">↩ вернуть</button>`;
+                else if (locked) html += `<span class="locked-mark">🔒</span>`;
+                else if (!inactive) html += `<div class="game-btns">
+                    <button class="btn btn-plus3 btn-small" onclick="addToGame(${ki},${g},3)">+++</button>
+                    <button class="btn btn-plus2 btn-small" onclick="addToGame(${ki},${g},2)">++</button>
+                    <button class="btn btn-plus1 btn-small" onclick="addToGame(${ki},${g},1)">+</button>
+                    <button class="btn btn-skip btn-small" onclick="addRoundOnly(${ki},${g})">0</button>
+                    <button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">⏭</button></div>`;
+                else html += `<button class="btn btn-skip-game" onclick="toggleSkipNotPlayed(${ki},${g})">↩ играть</button>`;
                 html += `</td>`;
             }
             html += `<td class="rounds-col"><span class="round-badge">${k.rounds}</span></td>`;
             html += `<td class="total-col">${total}</td>`;
-            html += `<td style="font-size:11px;">
-                До: <input type="number" value="${k.notPlayedBefore || 0}" min="0" max="${gamesCount}" style="width:40px;" onchange="setNotPlayedBefore(${ki}, this.value)"><br>
-                После: <input type="number" value="${k.notPlayedAfter || 0}" min="0" max="${gamesCount}" style="width:40px;" onchange="setNotPlayedAfter(${ki}, this.value)"><br>
-                <button class="btn btn-del btn-small" onclick="deleteKitten(${ki})">🗑 Удалить</button>
-            </td>`;
-            html += '</tr>';
+            html += `<td style="font-size:11px;">До: <input type="number" value="${k.notPlayedBefore||0}" min="0" max="${gamesCount}" style="width:40px;" onchange="setNotPlayedBefore(${ki},this.value)"><br>После: <input type="number" value="${k.notPlayedAfter||0}" min="0" max="${gamesCount}" style="width:40px;" onchange="setNotPlayedAfter(${ki},this.value)"><br><button class="btn btn-del btn-small" onclick="deleteKitten(${ki})">🗑 Удалить</button></td></tr>`;
         });
-
-        html += '</tbody></table>';
-        container.innerHTML = html;
+        html += '</tbody></table>'; c.innerHTML = html;
     }
 
     function renderReport() {
-        const area = document.getElementById('reportArea');
         let lines = ['Баллы'];
         kittens.forEach(k => {
             let total = 0;
-            for (let g = 0; g < gamesCount; g++) {
-                if (!isGameInactive(k, g) && !isGameSkipped(k, g)) total += getGameValue(k, g);
-            }
+            for (let g = 0; g < gamesCount; g++) if (!isGameInactive(k, g) && !isGameSkipped(k, g)) total += getGameValue(k, g);
             lines.push(`${k.id} - ${total}`);
         });
-        area.textContent = lines.join('\n');
+        document.getElementById('reportArea').textContent = lines.join('\n');
     }
 
     // ==================== ЛОГИКА ====================
-    function getGameValue(kitten, gameIndex) {
-        if (!kitten.games) kitten.games = [];
-        return kitten.games[gameIndex] ?? 0;
-    }
-
-    function isGameInactive(kitten, gameIndex) {
-        const gameNum = gameIndex + 1;
-        if (kitten.notPlayedBefore > 0 && gameNum <= kitten.notPlayedBefore) return true;
-        if (kitten.notPlayedAfter > 0 && gameNum > kitten.notPlayedAfter) return true;
+    function getGameValue(k, gi) { return k.games?.[gi] ?? 0; }
+    function isGameInactive(k, gi) {
+        let n = gi + 1;
+        if (k.notPlayedBefore > 0 && n <= k.notPlayedBefore) return true;
+        if (k.notPlayedAfter > 0 && n > k.notPlayedAfter) return true;
         return false;
     }
 
     function addToGame(ki, gi, delta) {
         if (!kittens[ki].games) kittens[ki].games = [];
-        let current = kittens[ki].games[gi] || 0;
         let max = getMaxPoints(gi);
-        let newVal = current + delta;
-        if (newVal > max) newVal = max;
+        let newVal = Math.min((kittens[ki].games[gi] || 0) + delta, max);
         kittens[ki].games[gi] = newVal;
         if (kittens[ki].rounds === undefined) kittens[ki].rounds = 0;
-        kittens[ki].rounds += 1;
-        lock(ki, gi);
+        kittens[ki].rounds += 1; lock(ki, gi);
         if (allKittensLockedInGame(gi)) unlockAll(gi);
         saveData(); render();
     }
 
     function addRoundOnly(ki, gi) {
         if (kittens[ki].rounds === undefined) kittens[ki].rounds = 0;
-        kittens[ki].rounds += 1;
-        lock(ki, gi);
+        kittens[ki].rounds += 1; lock(ki, gi);
         if (allKittensLockedInGame(gi)) unlockAll(gi);
         saveData(); render();
     }
 
-    function setNotPlayedBefore(ki, value) {
-        kittens[ki].notPlayedBefore = parseInt(value) || 0;
-        saveData(); render();
-    }
-
-    function setNotPlayedAfter(ki, value) {
-        kittens[ki].notPlayedAfter = parseInt(value) || 0;
-        saveData(); render();
-    }
-
-    function toggleSkipNotPlayed(ki, gi) {
-        let k = kittens[ki];
-        let gameNum = gi + 1;
-        if (k.notPlayedBefore >= gameNum) k.notPlayedBefore = gameNum - 1;
-        if (k.notPlayedAfter > 0 && gameNum > k.notPlayedAfter) k.notPlayedAfter = gameNum;
-        saveData(); render();
-    }
-
-    function copyReport() {
-        const text = document.getElementById('reportArea').textContent;
-        navigator.clipboard.writeText(text).then(() => showToast('📋 Скопировано!', 'success'))
-            .catch(() => showToast('Не удалось скопировать', 'error'));
-    }
-
-    // ==================== УДАЛЕНИЕ ИГРЫ ====================
-    function deleteGame(gameIndex) {
-        if (gamesCount <= 1) { showToast('Нельзя удалить последнюю игру', 'error'); return; }
-        let gameNum = gameIndex + 1;
-        gamesAreWeek.splice(gameIndex, 1);
-        gamesCount--;
-        kittens.forEach(k => {
-            if (k.games) k.games.splice(gameIndex, 1);
-            if (k.skippedGames) {
-                let newSkipped = {};
-                for (let g = 0; g < gamesCount + 1; g++) {
-                    if (g < gameIndex && k.skippedGames[g]) newSkipped[g] = true;
-                    else if (g > gameIndex && k.skippedGames[g]) newSkipped[g - 1] = true;
-                }
-                k.skippedGames = newSkipped;
-            }
-            if (k.notPlayedBefore > gameNum) k.notPlayedBefore--;
-            else if (k.notPlayedBefore === gameNum) k.notPlayedBefore = Math.max(0, gameNum - 1);
-            if (k.notPlayedAfter >= gameNum) k.notPlayedAfter = Math.max(0, k.notPlayedAfter - 1);
-            if (k.firstGame === gameIndex) { k.firstGame = -1; k.notPlayedBefore = Math.max(0, (k.notPlayedBefore || 0) - 1); }
-            else if (k.firstGame > gameIndex) k.firstGame--;
-        });
-        let newLocked = {};
-        for (let g = 0; g < gamesCount + 1; g++) {
-            if (g < gameIndex) newLocked[g] = lockedRounds[g] || {};
-            else if (g > gameIndex) newLocked[g - 1] = lockedRounds[g] || {};
-        }
-        lockedRounds = newLocked;
-        saveData(); render();
-        showToast(`Игра ${gameNum} удалена`);
-    }
-
-    function parseKittenLine(line) {
-        line = line.trim();
-        if (!line) return null;
-        let name = '', id = '';
-        let idMatch = line.match(/\[(\d+)\]\s*$/);
-        if (idMatch) { id = idMatch[1]; line = line.replace(/\[(\d+)\]\s*$/, '').trim(); }
-        else {
-            let numMatch = line.match(/(\d+)\s*$/);
-            if (numMatch) { id = numMatch[1]; line = line.replace(/(\d+)\s*$/, '').trim(); }
-        }
-        if (line.includes('-')) name = line.split('-').slice(1).join('-').trim();
-        else name = line;
-        name = name.replace(/\s+/g, ' ').trim();
-        if (!name || !id) return null;
-        return { name, id };
-    }
-
-    function createKitten(name, id) {
-        let kitten = {
-            name, id,
-            notPlayedBefore: 0, notPlayedAfter: 0,
-            games: new Array(gamesCount).fill(0),
-            rounds: 0, isNew: gamesCount > 0, firstGame: -1,
-            skippedGames: {}
-        };
-        if (gamesCount > 0) {
-            kitten.notPlayedBefore = gamesCount - 1;
-            kitten.firstGame = gamesCount - 1;
-            kitten.games[gamesCount - 1] = gamesAreWeek[gamesCount - 1] ? 4 : 2;
-            let maxRounds = 0;
-            kittens.forEach(k => { if (k.rounds !== undefined && k.rounds > maxRounds) maxRounds = k.rounds; });
-            kitten.rounds = maxRounds;
-        }
-        return kitten;
-    }
-
-    function bulkAdd() {
-        let text = document.getElementById('bulkInput').value.trim();
-        if (!text) { showToast('Вставь список котят!', 'error'); return; }
-        let added = 0, skipped = 0;
-        text.split('\n').forEach(line => {
-            let r = parseKittenLine(line);
-            if (r) {
-                if (!kittens.some(k => k.id === r.id)) { kittens.push(createKitten(r.name, r.id)); added++; }
-                else skipped++;
-            }
-        });
-        saveData(); render();
-        document.getElementById('bulkInput').value = '';
-        showToast(`Добавлено: ${added}${skipped > 0 ? ' | Пропущено: ' + skipped : ''}`, 'success');
-    }
-
-    function addKitten() {
-        const name = document.getElementById('nameInput').value.trim();
-        const id = document.getElementById('idInput').value.trim();
-        if (!name || !id) { showToast('Заполни имя и ID!', 'error'); return; }
-        if (kittens.some(k => k.id === id)) { showToast('Такой ID уже есть!', 'error'); return; }
-        kittens.push(createKitten(name, id));
-        saveData(); render();
-        document.getElementById('nameInput').value = '';
-        document.getElementById('idInput').value = '';
-        showToast('✅ Котёнок добавлен!', 'success');
-    }
-
-    function deleteKitten(index) {
-        let name = kittens[index].name;
-        kittens.splice(index, 1);
-        saveData(); render();
-        showToast(`🗑 ${name} удалён`);
-    }
-
-    function addNewGame() {
-        const isWeek = document.getElementById('gameOfWeekCheck').checked;
-        const defaultPoints = isWeek ? 4 : 2;
-        gamesCount++;
-        gamesAreWeek.push(isWeek);
-        kittens.forEach(k => {
-            if (!k.games) k.games = [];
-            k.games.push(defaultPoints);
-            k.rounds = 0;
-            k.isNew = false;
-        });
-        lockedRounds[gamesCount - 1] = {};
-        saveData(); render();
-        document.getElementById('gameOfWeekCheck').checked = false;
-    }
-
-    function applyToAll(delta) {
-        if (gamesCount === 0) { showToast('Сначала добавьте игру!', 'error'); return; }
-        const lastGame = gamesCount - 1;
-        const max = getMaxPoints(lastGame);
-        kittens.forEach((k, ki) => {
-            if (isLocked(ki, lastGame)) return;
-            if (isGameInactive(k, lastGame)) return;
-            if (isGameSkipped(k, lastGame)) return;
-            if (!k.games) k.games = new Array(gamesCount).fill(0);
-            if (k.games[lastGame] === undefined) k.games[lastGame] = 0;
-            let newVal = delta === 0 ? k.games[lastGame] : k.games[lastGame] + delta;
-            if (newVal > max) newVal = max;
-            k.games[lastGame] = newVal;
-            if (k.rounds === undefined) k.rounds = 0;
-            k.rounds += 1;
-            lock(ki, lastGame);
-        });
-        if (allKittensLockedInGame(lastGame)) unlockAll(lastGame);
-        saveData(); render();
-    }
-
-    document.getElementById('idInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') addKitten();
-    });
-
-    function esc(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-
-    loadData();
-    render();
-</script>
-</body>
-</html>
+    function setNotPlayedBefore(ki, v) { kittens[ki].notPlayedBefore = parseInt(v) || 0; saveData(); render(); }
+    function setNotPlay
