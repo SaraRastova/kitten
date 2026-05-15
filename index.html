@@ -310,8 +310,8 @@
 </div>
 
 <script>
-    const MAIN_KEY = 'kittens_v19';
-    const HISTORY_KEY = 'kittens_v19_history';
+    const MAIN_KEY = 'kittens_v20';
+    const HISTORY_KEY = 'kittens_v20_history';
 
     let kittens = [];
     let gamesCount = 0;
@@ -370,9 +370,6 @@
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') { closeGuide(); closeCustomGame(); }
-    });
-    document.getElementById('customPointsInput')?.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') addCustomGame();
     });
 
     // ==================== ИСТОРИЯ ====================
@@ -475,8 +472,8 @@
 
     function renderTable() {
         const c = document.getElementById('tableContainer');
-        if (kittens.length === 0) { c.innerHTML = '<p style="color:#999;">Пока нет котят.</p>'; return; }
-        if (gamesCount === 0) { c.innerHTML = '<p style="color:#999;">Нет игр.</p>'; return; }
+        if (kittens.length === 0) { c.innerHTML = '<p style="color:#999;">Пока нет котят. Добавьте первого!</p>'; return; }
+        if (gamesCount === 0) { c.innerHTML = '<p style="color:#999;">Нет игр. Нажмите «+ Новая игра».</p>'; return; }
 
         let html = '<table><thead><tr><th>Котёнок</th>';
         for (let g = 0; g < gamesCount; g++) {
@@ -554,4 +551,172 @@
     }
 
     function setNotPlayedBefore(ki, v) { kittens[ki].notPlayedBefore = parseInt(v) || 0; saveData(); render(); }
-    function setNotPlay
+    function setNotPlayedAfter(ki, v) { kittens[ki].notPlayedAfter = parseInt(v) || 0; saveData(); render(); }
+    function toggleSkipNotPlayed(ki, gi) {
+        let k = kittens[ki], n = gi + 1;
+        if (k.notPlayedBefore >= n) k.notPlayedBefore = n - 1;
+        if (k.notPlayedAfter > 0 && n > k.notPlayedAfter) k.notPlayedAfter = n;
+        saveData(); render();
+    }
+
+    function copyReport() {
+        const text = document.getElementById('reportArea').textContent;
+        navigator.clipboard.writeText(text).then(() => showToast('📋 Скопировано!', 'success'))
+            .catch(() => showToast('Не удалось скопировать', 'error'));
+    }
+
+    // ==================== УДАЛЕНИЕ ИГРЫ ====================
+    function deleteGame(gameIndex) {
+        if (gamesCount <= 1) { showToast('Нельзя удалить последнюю игру', 'error'); return; }
+        let gameNum = gameIndex + 1;
+        gamesAreWeek.splice(gameIndex, 1); gamesCount--;
+        kittens.forEach(k => {
+            if (k.games) k.games.splice(gameIndex, 1);
+            if (k.skippedGames) {
+                let ns = {};
+                for (let g = 0; g < gamesCount + 1; g++) {
+                    if (g < gameIndex && k.skippedGames[g]) ns[g] = true;
+                    else if (g > gameIndex && k.skippedGames[g]) ns[g - 1] = true;
+                }
+                k.skippedGames = ns;
+            }
+            if (k.notPlayedBefore > gameNum) k.notPlayedBefore--;
+            else if (k.notPlayedBefore === gameNum) k.notPlayedBefore = Math.max(0, gameNum - 1);
+            if (k.notPlayedAfter >= gameNum) k.notPlayedAfter = Math.max(0, k.notPlayedAfter - 1);
+            if (k.firstGame === gameIndex) { k.firstGame = -1; k.notPlayedBefore = Math.max(0, (k.notPlayedBefore || 0) - 1); }
+            else if (k.firstGame > gameIndex) k.firstGame--;
+        });
+        let nl = {};
+        for (let g = 0; g < gamesCount + 1; g++) {
+            if (g < gameIndex) nl[g] = lockedRounds[g] || {};
+            else if (g > gameIndex) nl[g - 1] = lockedRounds[g] || {};
+        }
+        lockedRounds = nl;
+        saveData(); render();
+        showToast(`Игра ${gameNum} удалена`);
+    }
+
+    // ==================== ПАРСИНГ ====================
+    function parseKittenLine(line) {
+        line = line.trim();
+        if (!line) return null;
+        let name = '', id = '';
+        let idMatch = line.match(/\[(\d+)\]\s*$/);
+        if (idMatch) { id = idMatch[1]; line = line.replace(/\[(\d+)\]\s*$/, '').trim(); }
+        else {
+            let numMatch = line.match(/(\d+)\s*$/);
+            if (numMatch) { id = numMatch[1]; line = line.replace(/(\d+)\s*$/, '').trim(); }
+        }
+        if (line.includes('-')) name = line.split('-').slice(1).join('-').trim();
+        else name = line;
+        name = name.replace(/\s+/g, ' ').trim();
+        if (!name || !id) return null;
+        return { name, id };
+    }
+
+    function createKitten(name, id) {
+        let kitten = {
+            name, id,
+            notPlayedBefore: 0, notPlayedAfter: 0,
+            games: new Array(gamesCount).fill(0),
+            rounds: 0, isNew: gamesCount > 0, firstGame: -1,
+            skippedGames: {}
+        };
+        if (gamesCount > 0) {
+            kitten.notPlayedBefore = gamesCount - 1;
+            kitten.firstGame = gamesCount - 1;
+            kitten.games[gamesCount - 1] = gamesAreWeek[gamesCount - 1] ? 4 : 2;
+            let maxRounds = 0;
+            kittens.forEach(k => { if (k.rounds !== undefined && k.rounds > maxRounds) maxRounds = k.rounds; });
+            kitten.rounds = maxRounds;
+        }
+        return kitten;
+    }
+
+    function bulkAdd() {
+        let text = document.getElementById('bulkInput').value.trim();
+        if (!text) { showToast('Вставь список котят!', 'error'); return; }
+        let added = 0, skipped = 0;
+        text.split('\n').forEach(line => {
+            let r = parseKittenLine(line);
+            if (r) {
+                if (!kittens.some(k => k.id === r.id)) { kittens.push(createKitten(r.name, r.id)); added++; }
+                else skipped++;
+            }
+        });
+        saveData(); render();
+        document.getElementById('bulkInput').value = '';
+        showToast(`Добавлено: ${added}${skipped > 0 ? ' | Пропущено: ' + skipped : ''}`, 'success');
+    }
+
+    function addKitten() {
+        const name = document.getElementById('nameInput').value.trim();
+        const id = document.getElementById('idInput').value.trim();
+        if (!name || !id) { showToast('Заполни имя и ID!', 'error'); return; }
+        if (kittens.some(k => k.id === id)) { showToast('Такой ID уже есть!', 'error'); return; }
+        kittens.push(createKitten(name, id));
+        saveData(); render();
+        document.getElementById('nameInput').value = '';
+        document.getElementById('idInput').value = '';
+        showToast('✅ Котёнок добавлен!', 'success');
+    }
+
+    function deleteKitten(index) {
+        let name = kittens[index].name;
+        kittens.splice(index, 1);
+        saveData(); render();
+        showToast(`🗑 ${name} удалён`);
+    }
+
+    function addNewGame() {
+        const isWeek = document.getElementById('gameOfWeekCheck').checked;
+        const defaultPoints = isWeek ? 4 : 2;
+        gamesCount++;
+        gamesAreWeek.push(isWeek);
+        kittens.forEach(k => {
+            if (!k.games) k.games = [];
+            k.games.push(defaultPoints);
+            k.rounds = 0;
+            k.isNew = false;
+        });
+        lockedRounds[gamesCount - 1] = {};
+        saveData(); render();
+        document.getElementById('gameOfWeekCheck').checked = false;
+    }
+
+    function applyToAll(delta) {
+        if (gamesCount === 0) { showToast('Сначала добавьте игру!', 'error'); return; }
+        const lastGame = gamesCount - 1;
+        const max = getMaxPoints(lastGame);
+        kittens.forEach((k, ki) => {
+            if (isLocked(ki, lastGame)) return;
+            if (isGameInactive(k, lastGame)) return;
+            if (isGameSkipped(k, lastGame)) return;
+            if (!k.games) k.games = new Array(gamesCount).fill(0);
+            if (k.games[lastGame] === undefined) k.games[lastGame] = 0;
+            let newVal = delta === 0 ? k.games[lastGame] : k.games[lastGame] + delta;
+            if (newVal > max) newVal = max;
+            k.games[lastGame] = newVal;
+            if (k.rounds === undefined) k.rounds = 0;
+            k.rounds += 1;
+            lock(ki, lastGame);
+        });
+        if (allKittensLockedInGame(lastGame)) unlockAll(lastGame);
+        saveData(); render();
+    }
+
+    document.getElementById('idInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') addKitten();
+    });
+
+    function esc(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    loadData();
+    render();
+</script>
+</body>
+</html>
