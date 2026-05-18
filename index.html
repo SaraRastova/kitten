@@ -569,26 +569,31 @@
             let total = 0;
             for (let g = 0; g < gamesCount; g++) {
                 let inactive = isGameInactive(k, g), skipped = isGameSkipped(k, g);
-                let out = k.isOut; // выбыл — не даём баллы
-                let val = (inactive || skipped || out) ? 0 : getGameValue(k, g);
-                if (!inactive && !skipped && !out) total += val;
+                let out = k.isOut;
+                // Если выбыл — показываем обычные баллы (не 0), но ставим замок
+                let val = (inactive || skipped) ? 0 : getGameValue(k, g);
+                if (!inactive && !skipped) total += val;
                 let cls = inactive ? 'inactive-game' : (skipped ? 'skipped-game' : (out ? 'out-game' : ''));
-                if (k.firstGame === g && !inactive && !skipped && !out) cls += ' new-kitten-game';
-                let locked = isLocked(ki, g) && !inactive && !skipped && !out;
+                if (k.firstGame === g && !inactive && !skipped) cls += ' new-kitten-game';
+                let locked = (isLocked(ki, g) || out) && !inactive && !skipped;
                 let creative = isCreativeGame(g);
 
                 html += `<td class="${cls}" style="padding:4px;">`;
                 
-                if (skipped || inactive || out) {
+                if (skipped || inactive) {
                     html += `<div class="points-cell">${val}</div>`;
+                } else if (out) {
+                    html += `<div class="points-cell">${val}</div>`;
+                    html += `<span class="locked-mark">🔒 выбыл</span>`;
                 } else {
                     html += `<input type="number" class="points-input" value="${val}" 
                         onchange="setGameValue(${ki},${g},this.value)" 
                         onfocus="this.select()" min="0" max="${getMaxPoints(g)}">`;
                 }
                 
-                if (out) html += `<span class="out-badge">выбыл</span>`;
-                else if (skipped) html += `<span class="skipped-badge">пропуск</span><br><button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">↩ вернуть</button>`;
+                if (out) {
+                    // Ничего дополнительного, уже показали 🔒 выбыл
+                } else if (skipped) html += `<span class="skipped-badge">пропуск</span><br><button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">↩ вернуть</button>`;
                 else if (locked) html += `<span class="locked-mark">🔒</span>`;
                 else if (!inactive) {
                     html += '<div class="game-btns">';
@@ -617,7 +622,7 @@
         let lines = ['Баллы'];
         kittens.forEach(k => {
             let total = 0;
-            for (let g = 0; g < gamesCount; g++) if (!isGameInactive(k, g) && !isGameSkipped(k, g) && !k.isOut) total += getGameValue(k, g);
+            for (let g = 0; g < gamesCount; g++) if (!isGameInactive(k, g) && !isGameSkipped(k, g)) total += getGameValue(k, g);
             lines.push(`${k.id} - ${total}`);
         });
         document.getElementById('reportArea').textContent = lines.join('\n');
@@ -814,7 +819,6 @@
             if (isLocked(ki, lastGame)) return;
             if (isGameInactive(k, lastGame)) return;
             if (isGameSkipped(k, lastGame)) return;
-            if (k.isOut) return; // выбыл — не даём баллы
             if (!k.games) k.games = new Array(gamesCount).fill(0);
             if (k.games[lastGame] === undefined) k.games[lastGame] = 0;
             let newVal = delta === 0 ? k.games[lastGame] : k.games[lastGame] + delta;
