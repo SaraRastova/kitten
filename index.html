@@ -46,7 +46,6 @@
         .btn-small    { padding: 4px 8px; font-size: 11px; }
         .btn-skip-game { background: #95a5a6; font-size: 10px; padding: 2px 6px; }
         .btn-out      { background: #e74c3c; font-size: 10px; padding: 3px 8px; }
-        .btn-out.active { background: #c0392b; }
 
         .top-bar {
             display: flex; justify-content: space-between; align-items: center;
@@ -304,7 +303,7 @@
         <div class="guide-step">
             <strong><span class="emoji">6️⃣</span> Пропуск игр и «Выбыл»</strong><br>
             <span class="guide-btn-demo gray">⏭</span> — пропустить конкретную игру.<br>
-            <span class="guide-btn-demo red">🚫 Выбыл</span> — не давать баллы до новой игры.<br>
+            <span class="guide-btn-demo red">🚫 Выбыл</span> — замок на баллы и раунды до новой игры.<br>
             <b>«До»</b> и <b>«После»</b> — не играл до/после указанной игры.
         </div>
 
@@ -394,6 +393,7 @@
             k.games.push(points);
             k.rounds = 0;
             k.isNew = false;
+            k.isOut = false;
         });
         lockedRounds[gamesCount - 1] = {};
         saveData(); render();
@@ -570,7 +570,6 @@
             for (let g = 0; g < gamesCount; g++) {
                 let inactive = isGameInactive(k, g), skipped = isGameSkipped(k, g);
                 let out = k.isOut;
-                // Если выбыл — показываем обычные баллы (не 0), но ставим замок
                 let val = (inactive || skipped) ? 0 : getGameValue(k, g);
                 if (!inactive && !skipped) total += val;
                 let cls = inactive ? 'inactive-game' : (skipped ? 'skipped-game' : (out ? 'out-game' : ''));
@@ -591,11 +590,10 @@
                         onfocus="this.select()" min="0" max="${getMaxPoints(g)}">`;
                 }
                 
-                if (out) {
-                    // Ничего дополнительного, уже показали 🔒 выбыл
-                } else if (skipped) html += `<span class="skipped-badge">пропуск</span><br><button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">↩ вернуть</button>`;
-                else if (locked) html += `<span class="locked-mark">🔒</span>`;
-                else if (!inactive) {
+                if (skipped) html += `<span class="skipped-badge">пропуск</span><br><button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">↩ вернуть</button>`;
+                else if (locked && !out) html += `<span class="locked-mark">🔒</span>`;
+                else if (locked && out) { /* уже показали 🔒 выбыл */ }
+                else if (!inactive && !out) {
                     html += '<div class="game-btns">';
                     if (creative) html += `<button class="btn btn-plus3 btn-small" onclick="addToGame(${ki},${g},3)">+++</button>`;
                     html += `<button class="btn btn-plus2 btn-small" onclick="addToGame(${ki},${g},2)">++</button>
@@ -603,6 +601,7 @@
                         <button class="btn btn-skip btn-small" onclick="addRoundOnly(${ki},${g})">0</button>
                         <button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">⏭</button></div>`;
                 }
+                else if (!inactive && out) { /* выбыл — кнопок нет */ }
                 else html += `<button class="btn btn-skip-game" onclick="toggleSkipNotPlayed(${ki},${g})">↩ играть</button>`;
                 html += `</td>`;
             }
@@ -611,7 +610,7 @@
             html += `<td style="font-size:11px;">
                 До: <input type="number" value="${k.notPlayedBefore||0}" min="0" max="${gamesCount}" style="width:40px;" onchange="setNotPlayedBefore(${ki},this.value)"><br>
                 После: <input type="number" value="${k.notPlayedAfter||0}" min="0" max="${gamesCount}" style="width:40px;" onchange="setNotPlayedAfter(${ki},this.value)"><br>
-                <button class="btn btn-out ${k.isOut?'active':''}" onclick="toggleOut(${ki})">${k.isOut?'✅ вернуть':'🚫 Выбыл'}</button>
+                <button class="btn btn-out" onclick="toggleOut(${ki})">${k.isOut?'✅ вернуть':'🚫 Выбыл'}</button>
                 <button class="btn btn-del btn-small" onclick="deleteKitten(${ki})">🗑 Удалить</button>
             </td></tr>`;
         });
@@ -638,6 +637,7 @@
     }
 
     function setGameValue(ki, gi, value) {
+        if (kittens[ki].isOut) return; // выбыл — нельзя редактировать
         if (!kittens[ki].games) kittens[ki].games = [];
         let max = getMaxPoints(gi);
         let newVal = parseInt(value) || 0;
@@ -648,6 +648,7 @@
     }
 
     function addToGame(ki, gi, delta) {
+        if (kittens[ki].isOut) return; // выбыл — не даём
         if (!kittens[ki].games) kittens[ki].games = [];
         let max = getMaxPoints(gi);
         let newVal = Math.min((kittens[ki].games[gi] || 0) + delta, max);
@@ -659,6 +660,7 @@
     }
 
     function addRoundOnly(ki, gi) {
+        if (kittens[ki].isOut) return; // выбыл — не даём
         if (kittens[ki].rounds === undefined) kittens[ki].rounds = 0;
         kittens[ki].rounds += 1; lock(ki, gi);
         if (allKittensLockedInGame(gi)) unlockAll(gi);
@@ -804,7 +806,7 @@
             k.games.push(defaultPoints);
             k.rounds = 0;
             k.isNew = false;
-            k.isOut = false; // снимаем "выбыл" с новой игрой
+            k.isOut = false;
         });
         lockedRounds[gamesCount - 1] = {};
         saveData(); render();
@@ -816,6 +818,7 @@
         const lastGame = gamesCount - 1;
         const max = getMaxPoints(lastGame);
         kittens.forEach((k, ki) => {
+            if (k.isOut) return;
             if (isLocked(ki, lastGame)) return;
             if (isGameInactive(k, lastGame)) return;
             if (isGameSkipped(k, lastGame)) return;
