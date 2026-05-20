@@ -577,10 +577,10 @@
             let badges = '';
             if (k.isNew) badges += ' <span class="new-badge">new</span>';
             if (k.isOut) badges += ' <span class="out-badge">🚫 выбыл</span>';
-            html += `<td>
+                       html += `<td>
                 <button class="btn btn-up" onclick="moveKitten(${ki}, -1)" ${ki === 0 ? 'disabled' : ''}>⬆</button>
                 <button class="btn btn-down" onclick="moveKitten(${ki}, 1)" ${ki === kittens.length - 1 ? 'disabled' : ''}>⬇</button>
-                <br><span class="kitten-name">${esc(k.name)}${badges}</span>
+                <br><span style="color:#8e44ad; font-weight:bold;">#${ki + 1}</span> <span class="kitten-name">${esc(k.name)}${badges}</span>
                 <br><span class="kitten-id">ID: ${esc(k.id)}</span></td>`;
             let total = 0;
             for (let g = 0; g < gamesCount; g++) {
