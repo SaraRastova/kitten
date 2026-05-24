@@ -307,7 +307,7 @@
         <div class="guide-step">
             <strong><span class="emoji">6️⃣</span> Пропуск игр и «Выбыл»</strong><br>
             <span class="guide-btn-demo gray">⏭</span> — пропустить конкретную игру.<br>
-            <span class="guide-btn-demo red">🚫 Выбыл</span> — замок на баллы и раунды до новой игры.<br>
+            <span class="guide-btn-demo red">🚫 Выбыл</span> — замок на баллы и раунды в текущей игре. В прошлых можно редактировать.<br>
             <b>«До»</b> и <b>«После»</b> — не играл до/после указанной игры.
         </div>
 
@@ -498,7 +498,7 @@
 
     function allKittensLockedInGame(gi) {
         if (kittens.length === 0) return false;
-        return kittens.every((k, ki) => isLocked(ki, gi) || isGameInactive(k, gi) || isGameSkipped(k, gi) || k.isOut);
+        return kittens.every((k, ki) => isLocked(ki, gi) || isGameInactive(k, gi) || isGameSkipped(k, gi) || (k.isOut && gi === gamesCount - 1));
     }
 
     function isLocked(ki, gi) { return lockedRounds[gi]?.[ki] === true; }
@@ -577,7 +577,7 @@
             let badges = '';
             if (k.isNew) badges += ' <span class="new-badge">new</span>';
             if (k.isOut) badges += ' <span class="out-badge">🚫 выбыл</span>';
-                       html += `<td>
+            html += `<td>
                 <button class="btn btn-up" onclick="moveKitten(${ki}, -1)" ${ki === 0 ? 'disabled' : ''}>⬆</button>
                 <button class="btn btn-down" onclick="moveKitten(${ki}, 1)" ${ki === kittens.length - 1 ? 'disabled' : ''}>⬇</button>
                 <br><span style="color:#8e44ad; font-weight:bold;">#${ki + 1}</span> <span class="kitten-name">${esc(k.name)}${badges}</span>
@@ -585,11 +585,11 @@
             let total = 0;
             for (let g = 0; g < gamesCount; g++) {
                 let inactive = isGameInactive(k, g), skipped = isGameSkipped(k, g);
-                let out = k.isOut;
+                let out = k.isOut && (g === gamesCount - 1); // замок только на текущую игру
                 let val = (inactive || skipped) ? 0 : getGameValue(k, g);
                 if (!inactive && !skipped) total += val;
                 let cls = inactive ? 'inactive-game' : (skipped ? 'skipped-game' : (out ? 'out-game' : ''));
-                if (k.firstGame === g && !inactive && !skipped) cls += ' new-kitten-game';
+                if (k.firstGame === g && !inactive && !skipped && !out) cls += ' new-kitten-game';
                 let locked = (isLocked(ki, g) || out) && !inactive && !skipped;
                 let creative = isCreativeGame(g);
 
@@ -616,7 +616,7 @@
                         <button class="btn btn-skip btn-small" onclick="addRoundOnly(${ki},${g})">0</button>
                         <button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">⏭</button></div>`;
                 }
-                else if (!inactive && out) { /* выбыл */ }
+                else if (!inactive && out) { /* выбыл в текущей игре */ }
                 else html += `<button class="btn btn-skip-game" onclick="toggleSkipNotPlayed(${ki},${g})">↩ играть</button>`;
                 html += `</td>`;
             }
@@ -652,7 +652,7 @@
     }
 
     function setGameValue(ki, gi, value) {
-        if (kittens[ki].isOut) return;
+        if (kittens[ki].isOut && gi === gamesCount - 1) return; // выбыл — нельзя редактировать текущую игру
         if (!kittens[ki].games) kittens[ki].games = [];
         let max = getMaxPoints(gi);
         let newVal = parseInt(value) || 0;
@@ -663,7 +663,7 @@
     }
 
     function addToGame(ki, gi, delta) {
-        if (kittens[ki].isOut) return;
+        if (kittens[ki].isOut && gi === gamesCount - 1) return; // выбыл в текущей игре
         if (!kittens[ki].games) kittens[ki].games = [];
         let max = getMaxPoints(gi);
         let newVal = Math.min((kittens[ki].games[gi] || 0) + delta, max);
@@ -675,7 +675,7 @@
     }
 
     function addRoundOnly(ki, gi) {
-        if (kittens[ki].isOut) return;
+        if (kittens[ki].isOut && gi === gamesCount - 1) return; // выбыл в текущей игре
         if (kittens[ki].rounds === undefined) kittens[ki].rounds = 0;
         kittens[ki].rounds += 1; lock(ki, gi);
         if (allKittensLockedInGame(gi)) unlockAll(gi);
@@ -833,7 +833,7 @@
         const lastGame = gamesCount - 1;
         const max = getMaxPoints(lastGame);
         kittens.forEach((k, ki) => {
-            if (k.isOut) return;
+            if (k.isOut) return; // выбыл в текущей игре — пропускаем
             if (isLocked(ki, lastGame)) return;
             if (isGameInactive(k, lastGame)) return;
             if (isGameSkipped(k, lastGame)) return;
