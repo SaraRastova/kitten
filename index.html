@@ -203,6 +203,7 @@
         <div class="top-btns">
             <button class="btn btn-guide" onclick="openGuide()">❓ Гайд</button>
             <button class="btn btn-history" onclick="toggleHistory()">📜 История</button>
+            <button class="btn" style="background:#2ecc71;" onclick="manualSave()">💾 Сохранить</button>
             <button class="btn btn-reset" onclick="fullReset()">🗑 Полный сброс</button>
         </div>
     </div>
@@ -437,6 +438,14 @@
     function saveData() {
         localStorage.setItem(MAIN_KEY, JSON.stringify({ kittens, gamesCount, gamesAreWeek, gamesAreCreative, gameNames, lockedRounds }));
         hasChanges = true;
+    }
+        function manualSave() {
+        if (kittens.length === 0) {
+            showToast('Нечего сохранять — добавь котят!', 'error');
+            return;
+        }
+        saveToHistory();
+        showToast('💾 Сохранено в историю!', 'success');
     }
 
     function loadData() {
