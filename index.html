@@ -626,7 +626,7 @@
                         <button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">⏭</button></div>`;
                 }
                 else if (!inactive && out) { /* выбыл */ }
-               else if (isGameInactive(k, g)) {
+            else {
     html += `<button class="btn btn-skip-game" onclick="makeGameActive(${ki},${g})">↩ играть</button>`;
 }
                 html += `</td>`;
@@ -877,26 +877,19 @@
 </html>
 function makeGameActive(ki, gi) {
     let k = kittens[ki];
-    let n = gi + 1;
     
-    // Если игра в зоне "не играл до" — сдвигаем границу
-    if (k.notPlayedBefore > 0 && n <= k.notPlayedBefore) {
-        k.notPlayedBefore = n - 1;
-    }
-    
-    // Если игра в зоне "не играл после" — сдвигаем границу
-    if (k.notPlayedAfter > 0 && n > k.notPlayedAfter) {
-        k.notPlayedAfter = n;
-    }
-    
-    // Если игра помечена как skipped — убираем
+    // Если игра помечена как пропущенная — убираем
     if (k.skippedGames && k.skippedGames[gi]) {
         delete k.skippedGames[gi];
     }
     
-    // Если после изменений зоны стали нулевыми — сбрасываем
-    if (k.notPlayedBefore <= 0) k.notPlayedBefore = 0;
-    if (k.notPlayedAfter > gamesCount) k.notPlayedAfter = 0;
+    // Корректируем notPlayedBefore
+    if (k.notPlayedBefore > 0) {
+        let n = gi + 1;
+        if (n <= k.notPlayedBefore) {
+            k.notPlayedBefore = n - 1;
+        }
+    }
     
     saveData(); render();
 }
