@@ -626,7 +626,9 @@
                         <button class="btn btn-skip-game" onclick="toggleSkipGame(${ki},${g})">⏭</button></div>`;
                 }
                 else if (!inactive && out) { /* выбыл */ }
-                else html += `<button class="btn btn-skip-game" onclick="toggleSkipNotPlayed(${ki},${g})">↩ играть</button>`;
+               else if (isGameInactive(k, g)) {
+    html += `<button class="btn btn-skip-game" onclick="makeGameActive(${ki},${g})">↩ играть</button>`;
+}
                 html += `</td>`;
             }
             html += `<td class="rounds-col"><span class="round-badge">${k.rounds}</span></td>`;
@@ -694,24 +696,7 @@
     function setNotPlayedBefore(ki, v) { kittens[ki].notPlayedBefore = parseInt(v) || 0; saveData(); render(); }
     function setNotPlayedAfter(ki, v) { kittens[ki].notPlayedAfter = parseInt(v) || 0; saveData(); render(); }
   function toggleSkipNotPlayed(ki, gi) {
-    let k = kittens[ki];
-    let n = gi + 1;
-    
-    // Проверяем, игра неактивна из-за notPlayedBefore?
-    if (k.notPlayedBefore > 0 && n <= k.notPlayedBefore) {
-        // Эта игра в зоне "не играл до" — сдвигаем границу
-        k.notPlayedBefore = n - 1;
-        saveData(); render();
-        return;
-    }
-    
-    // Проверяем, игра неактивна из-за notPlayedAfter?
-    if (k.notPlayedAfter > 0 && n > k.notPlayedAfter) {
-        // Эта игра в зоне "не играл после" — сдвигаем границу
-        k.notPlayedAfter = n;
-        saveData(); render();
-        return;
-    }
+    makeGameActive(ki, gi);
 }
 
     function copyReport() {
@@ -890,3 +875,28 @@
 </script>
 </body>
 </html>
+function makeGameActive(ki, gi) {
+    let k = kittens[ki];
+    let n = gi + 1;
+    
+    // Если игра в зоне "не играл до" — сдвигаем границу
+    if (k.notPlayedBefore > 0 && n <= k.notPlayedBefore) {
+        k.notPlayedBefore = n - 1;
+    }
+    
+    // Если игра в зоне "не играл после" — сдвигаем границу
+    if (k.notPlayedAfter > 0 && n > k.notPlayedAfter) {
+        k.notPlayedAfter = n;
+    }
+    
+    // Если игра помечена как skipped — убираем
+    if (k.skippedGames && k.skippedGames[gi]) {
+        delete k.skippedGames[gi];
+    }
+    
+    // Если после изменений зоны стали нулевыми — сбрасываем
+    if (k.notPlayedBefore <= 0) k.notPlayedBefore = 0;
+    if (k.notPlayedAfter > gamesCount) k.notPlayedAfter = 0;
+    
+    saveData(); render();
+}
