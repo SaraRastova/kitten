@@ -693,12 +693,29 @@
 
     function setNotPlayedBefore(ki, v) { kittens[ki].notPlayedBefore = parseInt(v) || 0; saveData(); render(); }
     function setNotPlayedAfter(ki, v) { kittens[ki].notPlayedAfter = parseInt(v) || 0; saveData(); render(); }
-    function toggleSkipNotPlayed(ki, gi) {
-        let k = kittens[ki], n = gi + 1;
-        if (k.notPlayedBefore >= n) k.notPlayedBefore = n - 1;
-        if (k.notPlayedAfter > 0 && n > k.notPlayedAfter) k.notPlayedAfter = n;
-        saveData(); render();
+  function toggleSkipNotPlayed(ki, gi) {
+    let k = kittens[ki], n = gi + 1;
+    
+    // Если игра в зоне notPlayedBefore — убираем только для этой игры
+    if (k.notPlayedBefore > 0) {
+        if (k.notPlayedBefore === 1 && n === 1) {
+            k.notPlayedBefore = 0;
+        } else if (n === k.notPlayedBefore + 1) {
+            k.notPlayedBefore = n - 1;
+        }
     }
+    
+    // Если игра в зоне notPlayedAfter — убираем только для этой игры
+    if (k.notPlayedAfter > 0) {
+        if (k.notPlayedAfter === gamesCount && n === gamesCount) {
+            k.notPlayedAfter = 0;
+        } else if (n === k.notPlayedAfter) {
+            k.notPlayedAfter = n + 1;
+        }
+    }
+    
+    saveData(); render();
+}
 
     function copyReport() {
         const text = document.getElementById('reportArea').textContent;
