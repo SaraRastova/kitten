@@ -537,6 +537,29 @@
     }
 
     // ==================== ОТРИСОВКА ====================
+       function makeGameActive(ki, gi) {
+        let k = kittens[ki];
+        let n = gi + 1;
+        
+        if (k.skippedGames && k.skippedGames[gi]) {
+            delete k.skippedGames[gi];
+        }
+        
+        if (k.notPlayedBefore > 0 && n <= k.notPlayedBefore) {
+            k.notPlayedBefore = n - 1;
+            if (k.notPlayedBefore <= 0) k.notPlayedBefore = 0;
+        }
+        
+        if (k.notPlayedAfter > 0 && n > k.notPlayedAfter) {
+            k.notPlayedAfter = n;
+            if (k.notPlayedAfter > gamesCount) k.notPlayedAfter = 0;
+        }
+        
+        saveData(); render();
+    }
+
+    loadData();
+    render();
     function render() {
         renderTable();
         renderActionButtons();
@@ -875,26 +898,3 @@
 </script>
 </body>
 </html>
-function makeGameActive(ki, gi) {
-    let k = kittens[ki];
-    let n = gi + 1; // номер игры
-    
-    // Если игра помечена как пропущенная — убираем
-    if (k.skippedGames && k.skippedGames[gi]) {
-        delete k.skippedGames[gi];
-    }
-    
-    // Если игра в зоне "до" — сдвигаем границу
-    if (k.notPlayedBefore > 0 && n <= k.notPlayedBefore) {
-        k.notPlayedBefore = n - 1;
-        if (k.notPlayedBefore <= 0) k.notPlayedBefore = 0;
-    }
-    
-    // Если игра в зоне "после" — сдвигаем границу
-    if (k.notPlayedAfter > 0 && n > k.notPlayedAfter) {
-        k.notPlayedAfter = n;
-        if (k.notPlayedAfter > gamesCount) k.notPlayedAfter = 0;
-    }
-    
-    saveData(); render();
-}
