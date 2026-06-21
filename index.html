@@ -694,27 +694,24 @@
     function setNotPlayedBefore(ki, v) { kittens[ki].notPlayedBefore = parseInt(v) || 0; saveData(); render(); }
     function setNotPlayedAfter(ki, v) { kittens[ki].notPlayedAfter = parseInt(v) || 0; saveData(); render(); }
   function toggleSkipNotPlayed(ki, gi) {
-    let k = kittens[ki], n = gi + 1;
+    let k = kittens[ki];
+    let n = gi + 1;
     
-    // Если игра в зоне notPlayedBefore — убираем только для этой игры
-    if (k.notPlayedBefore > 0) {
-        if (k.notPlayedBefore === 1 && n === 1) {
-            k.notPlayedBefore = 0;
-        } else if (n === k.notPlayedBefore + 1) {
-            k.notPlayedBefore = n - 1;
-        }
+    // Проверяем, игра неактивна из-за notPlayedBefore?
+    if (k.notPlayedBefore > 0 && n <= k.notPlayedBefore) {
+        // Эта игра в зоне "не играл до" — сдвигаем границу
+        k.notPlayedBefore = n - 1;
+        saveData(); render();
+        return;
     }
     
-    // Если игра в зоне notPlayedAfter — убираем только для этой игры
-    if (k.notPlayedAfter > 0) {
-        if (k.notPlayedAfter === gamesCount && n === gamesCount) {
-            k.notPlayedAfter = 0;
-        } else if (n === k.notPlayedAfter) {
-            k.notPlayedAfter = n + 1;
-        }
+    // Проверяем, игра неактивна из-за notPlayedAfter?
+    if (k.notPlayedAfter > 0 && n > k.notPlayedAfter) {
+        // Эта игра в зоне "не играл после" — сдвигаем границу
+        k.notPlayedAfter = n;
+        saveData(); render();
+        return;
     }
-    
-    saveData(); render();
 }
 
     function copyReport() {
